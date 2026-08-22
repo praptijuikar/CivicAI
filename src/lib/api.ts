@@ -7,65 +7,121 @@ import type {
   AIAnalysisResult,
 } from "../types.ts";
 
+/**
+ * Custom error class for API response errors
+ */
+export class ApiError extends Error {
+  public status: number;
+  public details?: any;
+
+  constructor(message: string, status: number, details?: any) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
+/**
+ * Base configuration and HTTP client helper
+ */
+const BASE_URL = (import.meta as any).env?.VITE_API_URL || "https://civicai-production.up.railway.app";
+
+async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const headers = new Headers(options.headers);
+
+  // Auto-inject JSON Content-Type if payload exists
+  if (options.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  // Auto-inject Authorization Bearer token
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+
+  // Handle non-2xx HTTP status codes
+  if (!response.ok) {
+    let errorData: any = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      // Fallback if response body is empty or non-JSON (e.g. HTML error page)
+      errorData = { message: response.statusText || "An unexpected error occurred." };
+    }
+
+    throw new ApiError(
+      errorData.message || `Request failed with status ${response.status}`,
+      response.status,
+      errorData
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * Helper to build clean URL query strings from parameters
+ */
+function buildQueryString(params?: Record<string, string | number | boolean | undefined>): string {
+  if (!params) return "";
+  const query = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.set(key, String(value));
+    }
+  });
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : "";
+}
+
+/**
+ * Refactored CivicAI API Service
+ */
 export const api = {
-  // Auth
-  getUsers: async (): Promise<{ users: User[] }> => {
-    const res = await fetch("/api/v1/auth/users");
-    return res.json();
-  },
+  // --- Auth ---
+  getUsers: (): Promise<{ users: User[] }> => 
+    httpClient("/api/v1/auth/users"),
 
-  login: async (email?: string, role?: string): Promise<{ token: string; user: User }> => {
-    const res = await fetch("/api/v1/auth/login", {
+  login: (email?: string, role?: string): Promise<{ token: string; user: User }> =>
+    httpClient("/api/v1/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, role }),
-    });
-    return res.json();
-  },
+    }),
 
-  // Issues
-  getIssues: async (filters?: {
+  // --- Issues ---
+  getIssues: (filters?: {
     status?: string;
     category?: string;
     department?: string;
     severity?: string;
     search?: string;
     userId?: string;
-  }): Promise<{ issues: CivicIssue[]; total: number }> => {
-    const query = new URLSearchParams();
-    if (filters?.status) query.set("status", filters.status);
-    if (filters?.category) query.set("category", filters.category);
-    if (filters?.department) query.set("department", filters.department);
-    if (filters?.severity) query.set("severity", filters.severity);
-    if (filters?.search) query.set("search", filters.search);
-    if (filters?.userId) query.set("userId", filters.userId);
+  }): Promise<{ issues: CivicIssue[]; total: number }> =>
+    httpClient(`/api/v1/issues${buildQueryString(filters)}`),
 
-    const res = await fetch(`/api/v1/issues?${query.toString()}`);
-    return res.json();
-  },
+  getIssueById: (id: string): Promise<{ issue: CivicIssue }> =>
+    httpClient(`/api/v1/issues/${id}`),
 
-  getIssueById: async (id: string): Promise<{ issue: CivicIssue }> => {
-    const res = await fetch(`/api/v1/issues/${id}`);
-    return res.json();
-  },
-
-  analyzeImage: async (
+  analyzeImage: (
     imageBase64: string,
     mimeType?: string,
     description?: string
-  ): Promise<{ analysis: AIAnalysisResult }> => {
-    const res = await fetch("/api/v1/issues/analyze-image", {
+  ): Promise<{ analysis: AIAnalysisResult }> =>
+    httpClient("/api/v1/issues/analyze-image", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageBase64, mimeType, description }),
-    });
-    if (!res.ok) {
-      throw new Error("AI Visual analysis failed");
-    }
-    return res.json();
-  },
+    }),
 
-  checkDuplicates: async (
+  checkDuplicates: (
     latitude: number,
     longitude: number,
     category?: string,
@@ -80,34 +136,25 @@ export const api = {
       isSameCategory: boolean;
       confidence: number;
     }[];
-  }> => {
-    const res = await fetch("/api/v1/issues/duplicate-check", {
+  }> =>
+    httpClient("/api/v1/issues/duplicate-check", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ latitude, longitude, category, radiusMeters }),
-    });
-    return res.json();
-  },
+    }),
 
-  createIssue: async (issueData: Partial<CivicIssue>): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch("/api/v1/issues", {
+  createIssue: (issueData: Partial<CivicIssue>): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient("/api/v1/issues", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(issueData),
-    });
-    return res.json();
-  },
+    }),
 
-  upvoteIssue: async (id: string, userId?: string): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch(`/api/v1/issues/${id}/upvote`, {
+  upvoteIssue: (id: string, userId?: string): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient(`/api/v1/issues/${id}/upvote`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId }),
-    });
-    return res.json();
-  },
+    }),
 
-  assignIssue: async (
+  assignIssue: (
     id: string,
     payload: {
       department: string;
@@ -117,28 +164,22 @@ export const api = {
       deadlineAt?: string;
       adminNotes?: string;
     }
-  ): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch(`/api/v1/issues/${id}/assign`, {
+  ): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient(`/api/v1/issues/${id}/assign`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  startWork: async (
+  startWork: (
     id: string,
     payload: { officerName?: string; beforeImageUrl?: string }
-  ): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch(`/api/v1/issues/${id}/start-work`, {
+  ): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient(`/api/v1/issues/${id}/start-work`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  resolveIssue: async (
+  resolveIssue: (
     id: string,
     payload: {
       officerId?: string;
@@ -147,45 +188,34 @@ export const api = {
       afterImageUrl?: string;
       materialsUsed?: string[];
     }
-  ): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch(`/api/v1/issues/${id}/resolve`, {
+  ): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient(`/api/v1/issues/${id}/resolve`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  verifyIssue: async (
+  verifyIssue: (
     id: string,
     payload: { isSatisfied: boolean; verificationNotes?: string; citizenName?: string }
-  ): Promise<{ issue: CivicIssue; message: string }> => {
-    const res = await fetch(`/api/v1/issues/${id}/verify`, {
+  ): Promise<{ issue: CivicIssue; message: string }> =>
+    httpClient(`/api/v1/issues/${id}/verify`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  // Integrity Reports
-  getIntegrityReports: async (): Promise<{ reports: IntegrityReport[]; count: number }> => {
-    const res = await fetch("/api/v1/integrity-reports");
-    return res.json();
-  },
+  // --- Integrity Reports ---
+  getIntegrityReports: (): Promise<{ reports: IntegrityReport[]; count: number }> =>
+    httpClient("/api/v1/integrity-reports"),
 
-  createIntegrityReport: async (
+  createIntegrityReport: (
     payload: Partial<IntegrityReport>
-  ): Promise<{ report: IntegrityReport; trackingCode: string; sha256MasterHash: string; message: string }> => {
-    const res = await fetch("/api/v1/integrity-reports", {
+  ): Promise<{ report: IntegrityReport; trackingCode: string; sha256MasterHash: string; message: string }> =>
+    httpClient("/api/v1/integrity-reports", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  updateIntegrityReport: async (
+  updateIntegrityReport: (
     id: string,
     payload: {
       status?: string;
@@ -194,28 +224,19 @@ export const api = {
       investigatorName?: string;
       newAuditStep?: { stepName: string; notes?: string };
     }
-  ): Promise<{ report: IntegrityReport; message: string }> => {
-    const res = await fetch(`/api/v1/integrity-reports/${id}`, {
+  ): Promise<{ report: IntegrityReport; message: string }> =>
+    httpClient(`/api/v1/integrity-reports/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
+    }),
 
-  // Analytics
-  getAnalytics: async (): Promise<{ analytics: AnalyticsOverview }> => {
-    const res = await fetch("/api/v1/analytics/overview");
-    return res.json();
-  },
+  // --- Analytics & Resources ---
+  getAnalytics: (): Promise<{ analytics: AnalyticsOverview }> =>
+    httpClient("/api/v1/analytics/overview"),
 
-  getDepartments: async (): Promise<{ departments: DepartmentStats[] }> => {
-    const res = await fetch("/api/v1/departments");
-    return res.json();
-  },
+  getDepartments: (): Promise<{ departments: DepartmentStats[] }> =>
+    httpClient("/api/v1/departments"),
 
-  getOfficers: async (): Promise<{ officers: User[] }> => {
-    const res = await fetch("/api/v1/officers");
-    return res.json();
-  },
+  getOfficers: (): Promise<{ officers: User[] }> =>
+    httpClient("/api/v1/officers"),
 };
