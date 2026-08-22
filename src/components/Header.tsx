@@ -1,5 +1,6 @@
 import { Shield, Sparkles, User, Bell, ChevronDown, Check } from "lucide-react";
-import type { UserRole, User as UserType } from "../types.ts";
+import type { Language, UserRole, User as UserType } from "../types.ts";
+import { languages, translate } from "../lib/i18n.ts";
 
 interface HeaderProps {
   currentRole: UserRole;
@@ -9,6 +10,8 @@ interface HeaderProps {
   onUserSelect: (user: UserType) => void;
   activePortalTab: "citizen" | "integrity" | "authority" | "officer" | "analytics";
   onPortalTabChange: (tab: "citizen" | "integrity" | "authority" | "officer" | "analytics") => void;
+  language: Language;
+  onLanguageChange: (language: Language) => void;
 }
 
 export default function Header({
@@ -19,6 +22,8 @@ export default function Header({
   onUserSelect,
   activePortalTab,
   onPortalTabChange,
+  language,
+  onLanguageChange,
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#151921] backdrop-blur-md border-b border-[#2D3139]">
@@ -39,7 +44,7 @@ export default function Header({
                 </span>
               </div>
               <p className="text-[11px] text-gray-400 hidden sm:block">
-                AI-Assisted Civic Accountability & Integrity Platform
+                {translate(language, "platformDescription")}
               </p>
             </div>
           </div>
@@ -51,68 +56,63 @@ export default function Header({
                 onPortalTabChange("citizen");
                 onRoleChange("citizen");
               }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${
-                activePortalTab === "citizen"
-                  ? "bg-[#1E2229] text-blue-400 border border-blue-500/20 shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${activePortalTab === "citizen"
+                ? "bg-[#1E2229] text-blue-400 border border-blue-500/20 shadow-sm"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
+                }`}
             >
               {activePortalTab === "citizen" && <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>}
-              <span>Citizen Portal</span>
+              <span>{translate(language, "citizenPortal")}</span>
             </button>
             <button
               onClick={() => {
                 onPortalTabChange("integrity");
                 onRoleChange("investigator");
               }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${
-                activePortalTab === "integrity"
-                  ? "bg-[#1E2229] text-red-400 border border-red-500/30 shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${activePortalTab === "integrity"
+                ? "bg-[#1E2229] text-red-400 border border-red-500/30 shadow-sm"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
+                }`}
             >
               {activePortalTab === "integrity" && <div className="w-1.5 h-1.5 rounded-full bg-red-400"></div>}
-              <span>Integrity Portal</span>
-              <div className="bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded text-[9px] font-bold">SECURE</div>
+              <span>{translate(language, "integrityPortal")}</span>
+              <div className="bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{translate(language, "secure")}</div>
             </button>
             <button
               onClick={() => {
                 onPortalTabChange("authority");
                 onRoleChange("admin");
               }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${
-                activePortalTab === "authority"
-                  ? "bg-[#1E2229] text-blue-400 border border-blue-500/20 shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${activePortalTab === "authority"
+                ? "bg-[#1E2229] text-blue-400 border border-blue-500/20 shadow-sm"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
+                }`}
             >
               {activePortalTab === "authority" && <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>}
-              <span>Admin Dashboard</span>
+              <span>{translate(language, "adminDashboard")}</span>
             </button>
             <button
               onClick={() => {
                 onPortalTabChange("officer");
                 onRoleChange("officer");
               }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${
-                activePortalTab === "officer"
-                  ? "bg-[#1E2229] text-emerald-400 border border-emerald-500/20 shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${activePortalTab === "officer"
+                ? "bg-[#1E2229] text-emerald-400 border border-emerald-500/20 shadow-sm"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
+                }`}
             >
               {activePortalTab === "officer" && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>}
-              <span>Field Operations</span>
+              <span>{translate(language, "fieldOperations")}</span>
             </button>
             <button
               onClick={() => onPortalTabChange("analytics")}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${
-                activePortalTab === "analytics"
-                  ? "bg-[#1E2229] text-amber-400 border border-amber-500/20 shadow-sm"
-                  : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-2 ${activePortalTab === "analytics"
+                ? "bg-[#1E2229] text-amber-400 border border-amber-500/20 shadow-sm"
+                : "text-gray-400 hover:text-gray-200 hover:bg-[#1E2229]/50"
+                }`}
             >
               {activePortalTab === "analytics" && <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>}
-              <span>System Analytics</span>
+              <span>{translate(language, "systemAnalytics")}</span>
             </button>
           </nav>
 
@@ -120,10 +120,26 @@ export default function Header({
           <div className="flex items-center gap-3">
             {/* System Status Indicator */}
             <div className="hidden lg:flex items-center gap-2 bg-[#1E2229] px-3 py-1.5 rounded-lg border border-[#2D3139]">
-              <span className="text-xs text-gray-400">System Status:</span>
+              <span className="text-xs text-gray-400">{translate(language, "systemStatus")}:</span>
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Operational</span>
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">{translate(language, "operational")}</span>
             </div>
+
+            <label className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              <span className="sr-only">{translate(language, "language")}</span>
+              <select
+                value={language}
+                onChange={(event) => onLanguageChange(event.target.value as Language)}
+                aria-label={translate(language, "language")}
+                className="h-8 max-w-24 cursor-pointer rounded-lg border border-[#2D3139] bg-[#1E2229] px-2 text-xs font-semibold normal-case tracking-normal text-gray-200 outline-none transition hover:border-blue-500/50 focus:border-blue-500"
+              >
+                {languages.map((option) => (
+                  <option key={option.code} value={option.code} className="bg-[#1E2229]">
+                    {option.nativeLabel}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             {/* Persona Switcher Menu */}
             <div className="relative group">
@@ -143,7 +159,7 @@ export default function Header({
               {/* Dropdown for instant RBAC switching */}
               <div className="absolute right-0 mt-2 w-64 bg-[#1E2229] border border-[#2D3139] rounded-xl shadow-2xl p-2 hidden group-hover:block z-50 animate-in fade-in zoom-in-95">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-2 py-1.5">
-                  Switch Persona & Role
+                  {translate(language, "switchPersona")}
                 </div>
                 <div className="space-y-1">
                   {allUsers.map((u) => (
@@ -157,11 +173,10 @@ export default function Header({
                         else if (u.role === "officer") onPortalTabChange("officer");
                         else if (u.role === "investigator") onPortalTabChange("integrity");
                       }}
-                      className={`w-full flex items-center justify-between p-2 rounded-lg text-xs transition ${
-                        currentUser.id === u.id
-                          ? "bg-[#151921] text-white font-semibold border border-blue-500/30"
-                          : "text-gray-300 hover:bg-[#151921]"
-                      }`}
+                      className={`w-full flex items-center justify-between p-2 rounded-lg text-xs transition ${currentUser.id === u.id
+                        ? "bg-[#151921] text-white font-semibold border border-blue-500/30"
+                        : "text-gray-300 hover:bg-[#151921]"
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <img src={u.avatar} alt={u.name} className="w-6 h-6 rounded-full object-cover" />

@@ -1,5 +1,7 @@
 export type UserRole = 'citizen' | 'admin' | 'officer' | 'investigator';
 
+export type Language = 'en' | 'hi' | 'es' | 'bn';
+
 export interface User {
   id: string;
   name: string;
@@ -80,7 +82,7 @@ export interface CivicIssue {
   reportCount: number; // For duplicate merges / upvotes
   upvotes: number;
   upvotedUserIds?: string[];
-  
+
   // Assignment & Routing
   assignedDepartment?: string;
   assignedOfficerId?: string;
@@ -89,31 +91,31 @@ export interface CivicIssue {
   assignedAt?: string;
   deadlineAt?: string;
   slaHours?: number;
-  
+
   // Images
   initialImageUrl?: string;
   beforeImageUrl?: string;
   afterImageUrl?: string;
-  
+
   // Officer resolution
   resolutionNotes?: string;
   resolvedAt?: string;
   resolvedByOfficerId?: string;
   resolvedByOfficerName?: string;
   materialsUsed?: string[];
-  
+
   // Citizen verification
   verificationStatus?: 'pending' | 'verified_citizen' | 'disputed';
   verificationNotes?: string;
   verifiedAt?: string;
   disputeReason?: string;
-  
+
   // AI visual analysis
   aiAnalysis?: AIAnalysisResult;
-  
+
   // Audit history
   history: IssueHistoryItem[];
-  
+
   createdAt: string;
   updatedAt: string;
 }

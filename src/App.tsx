@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import type { User, UserRole, CivicIssue } from "./types.ts";
+import type { User, UserRole, CivicIssue, Language } from "./types.ts";
 import { api } from "./lib/api.ts";
+import { translate } from "./lib/i18n.ts";
 import Header from "./components/Header.tsx";
 import CitizenPortal from "./components/CitizenPortal.tsx";
 import IntegrityPortal from "./components/IntegrityPortal.tsx";
@@ -13,6 +14,10 @@ export default function App() {
   const [users, setUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentRole, setCurrentRole] = useState<UserRole>("citizen");
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLanguage = localStorage.getItem("civicai-language");
+    return savedLanguage === "hi" || savedLanguage === "es" || savedLanguage === "bn" ? savedLanguage : "en";
+  });
   const [activePortalTab, setActivePortalTab] = useState<
     "citizen" | "integrity" | "authority" | "officer" | "analytics"
   >("citizen");
@@ -66,6 +71,11 @@ export default function App() {
     setIssues((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
   };
 
+  useEffect(() => {
+    localStorage.setItem("civicai-language", language);
+    document.documentElement.lang = language;
+  }, [language]);
+
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-[#0F1115] flex flex-col items-center justify-center text-gray-400 space-y-3">
@@ -86,6 +96,8 @@ export default function App() {
         onUserSelect={handleUserSelect}
         activePortalTab={activePortalTab}
         onPortalTabChange={setActivePortalTab}
+        language={language}
+        onLanguageChange={setLanguage}
       />
 
       {/* Main View Portals */}
@@ -132,16 +144,16 @@ export default function App() {
 
       {/* Geometric Balance Platform Status Footer */}
       <footer className="hidden sm:flex h-12 border-t border-[#2D3139] px-8 items-center justify-between text-[10px] text-gray-500 bg-[#151921]">
-        <p>© 2026 CivicAI Global Monitoring System • v2.5.0-stable</p>
+        <p>{translate(language, "footer")}</p>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 font-mono">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> API: 14ms
           </span>
           <span className="flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Database Cluster: Primary
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> {translate(language, "database")}
           </span>
           <span className="flex items-center gap-1.5 font-mono">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> AI Node: Gemini-3.7-Flash
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> {translate(language, "aiNode")}
           </span>
         </div>
       </footer>
@@ -163,52 +175,47 @@ export default function App() {
             setActivePortalTab("citizen");
             setCurrentRole("citizen");
           }}
-          className={`flex flex-col items-center p-1.5 rounded-lg transition ${
-            activePortalTab === "citizen" ? "text-blue-400 font-bold" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center p-1.5 rounded-lg transition ${activePortalTab === "citizen" ? "text-blue-400 font-bold" : "text-gray-400"
+            }`}
         >
-          <span>Citizen</span>
+          <span>{translate(language, "citizen")}</span>
         </button>
         <button
           onClick={() => {
             setActivePortalTab("integrity");
             setCurrentRole("investigator");
           }}
-          className={`flex flex-col items-center p-1.5 rounded-lg transition ${
-            activePortalTab === "integrity" ? "text-red-400 font-bold" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center p-1.5 rounded-lg transition ${activePortalTab === "integrity" ? "text-red-400 font-bold" : "text-gray-400"
+            }`}
         >
-          <span>Vault</span>
+          <span>{translate(language, "vault")}</span>
         </button>
         <button
           onClick={() => {
             setActivePortalTab("authority");
             setCurrentRole("admin");
           }}
-          className={`flex flex-col items-center p-1.5 rounded-lg transition ${
-            activePortalTab === "authority" ? "text-blue-400 font-bold" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center p-1.5 rounded-lg transition ${activePortalTab === "authority" ? "text-blue-400 font-bold" : "text-gray-400"
+            }`}
         >
-          <span>Admin</span>
+          <span>{translate(language, "admin")}</span>
         </button>
         <button
           onClick={() => {
             setActivePortalTab("officer");
             setCurrentRole("officer");
           }}
-          className={`flex flex-col items-center p-1.5 rounded-lg transition ${
-            activePortalTab === "officer" ? "text-emerald-400 font-bold" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center p-1.5 rounded-lg transition ${activePortalTab === "officer" ? "text-emerald-400 font-bold" : "text-gray-400"
+            }`}
         >
-          <span>Field</span>
+          <span>{translate(language, "field")}</span>
         </button>
         <button
           onClick={() => setActivePortalTab("analytics")}
-          className={`flex flex-col items-center p-1.5 rounded-lg transition ${
-            activePortalTab === "analytics" ? "text-amber-400 font-bold" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center p-1.5 rounded-lg transition ${activePortalTab === "analytics" ? "text-amber-400 font-bold" : "text-gray-400"
+            }`}
         >
-          <span>Analytics</span>
+          <span>{translate(language, "analytics")}</span>
         </button>
       </div>
     </div>
