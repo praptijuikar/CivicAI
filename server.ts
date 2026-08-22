@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors"; // 1. Add CORS import
+import cors from "cors";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { analyzeCivicImage } from "./server/gemini.ts";
@@ -16,14 +16,20 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  // 2. Enable CORS middleware for Vercel and cross-origin requests
-  app.use(
-    cors({
-      origin: "*", // Allows requests from Vercel, localhost, etc.
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "x-user-id"],
-    })
-  );
+  // Manual preflight handler to guarantee headers are set for all origins
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-user-id");
+
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
+  // Enable CORS middleware
+  app.use(cors());
 
   // Middleware for JSON body parsing with large payload limit for base64 images
   app.use(express.json({ limit: "25mb" }));
