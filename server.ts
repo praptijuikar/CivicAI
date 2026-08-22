@@ -16,32 +16,20 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  // Allowed origins (Vercel production URL + local dev)
-  const allowedOrigins = [
-    "https://civic-ai-prapti3.vercel.app",
-    "http://localhost:5173",
-    "http://localhost:3000",
-  ];
+  // Universal CORS Middleware
+  app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "*");
 
-  // Enable CORS middleware with explicitly permitted origins
-  app.use(
-    cors({
-      origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(null, true); // Allow all origins if you prefer open access
-        }
-      },
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "x-user-id"],
-    })
-  );
+    if (req.method === "OPTIONS") {
+      return res.status(200).end();
+    }
+    next();
+  });
 
-  // Handle preflight requests
-  app.options("*", cors());
-
+  // Middleware for JSON body parsing with large payload limit for base64 images
+  app.use(express.json({ limit: "25mb" }));
   // Middleware for JSON body parsing with large payload limit for base64 images
   app.use(express.json({ limit: "25mb" }));
   app.use(express.urlencoded({ extended: true, limit: "25mb" }));
