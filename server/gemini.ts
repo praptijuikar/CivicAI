@@ -94,7 +94,7 @@ Analyze this civic infrastructure/public works image carefully.
 ${userContextDescription ? `User noted: "${userContextDescription}"` : ""}
 
 IMPORTANT SCENE VALIDATION:
-1. First, determine if this is a valid real-world photograph, or an obviously AI-generated/tampered image (isAuthentic). Check for signs like impossible physics, blurred text, synthetic textures. Provide reasoning in authenticityReasoning.
+1. First, determine if this is a valid real-world photograph, or a blatant screenshot/tampered image (isAuthentic). Normal smartphone photos, slightly blurry images, compressed files, or photos taken of screens/monitors in the field are AUTHENTIC. Only reject as a screenshot if there are obvious device UI elements (like phone status bars, app navigation buttons) or blatant stock-photo watermarks. If you cannot definitively prove it is a screenshot, default to true. Provide reasoning in authenticityReasoning.
 2. Determine whether this image actually shows a road, street, or public infrastructure scene (isValidScene). If it's a bedroom, selfie, or random indoor object, it is NOT a valid scene.
 3. Determine if an actual civic issue is visible in the scene (hasVisibleIssue). If it's just a normal clean road, there is no issue.
 4. If the user provided a category context, check if the visible issue matches that category (isCategoryMismatch).
@@ -221,7 +221,7 @@ Evaluate:
           hasVisibleIssue: Boolean(parsed.hasVisibleIssue),
           primaryIssueDetected: parsed.primaryIssueDetected || "",
           isCategoryMismatch: Boolean(parsed.isCategoryMismatch),
-          isAuthentic: true, // Relaxed for testing: Boolean(parsed.isAuthentic ?? true),
+          isAuthentic: Boolean(parsed.isAuthentic ?? true),
           authenticityReasoning: parsed.authenticityReasoning || "Appears authentic",
           predictedCategory: parsed.predictedCategory || "Roads & Infrastructure",
           subcategory: parsed.subcategory || "Structural Defect",

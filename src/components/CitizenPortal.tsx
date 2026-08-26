@@ -871,7 +871,7 @@ export default function CitizenPortal({
                       <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                       <p className="text-sm font-semibold text-red-200">
                         <strong className="text-red-500 block mb-1">⚠️ Invalid Image Detected</strong>
-                        This photo appears to be a screenshot or web-downloaded image. (Testing Bypass Active - You may proceed)
+                        This photo appears to be a screenshot or web-downloaded image. Please upload an authentic photo of public infrastructure.
                         {aiAnalysis.authenticityReasoning && (
                           <span className="block mt-1 opacity-80 text-xs font-mono">{aiAnalysis.authenticityReasoning}</span>
                         )}
@@ -1034,7 +1034,7 @@ export default function CitizenPortal({
                 <button
                   type="button"
                   onClick={handleInitiateSubmission}
-                  disabled={isCheckingDuplicates || isSubmittingReport || (aiAnalysis && !aiAnalysis.isValidScene)}
+                  disabled={isCheckingDuplicates || isSubmittingReport || (aiAnalysis && (!aiAnalysis.isValidScene || !aiAnalysis.isAuthentic))}
                   className="px-6 py-2.5 rounded-xl bg-saffron hover:bg-saffron/90 text-foreground font-bold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCheckingDuplicates || isSubmittingReport ? (
