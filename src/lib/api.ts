@@ -25,14 +25,20 @@ export class ApiError extends Error {
 /**
  * Base configuration and HTTP client helper
  */
-const API_URL = import.meta.env.VITE_API_URL || '';
-const BASE_URL = (API_URL || "https://civicai-production.up.railway.app").replace(/\/api\/?$/, "");
+const API_URL = import.meta.env.VITE_API_URL || 'https://civicai-production.up.railway.app';
+const BASE_URL = API_URL.replace(/\/api\/?$/, "");
+
 async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
 
   // Auto-inject JSON Content-Type if payload exists
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
+  }
+
+  // Ensure Accept header is set for JSON
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
   }
 
   const language = typeof window !== "undefined" ? localStorage.getItem("civicai-language") : null;
@@ -42,6 +48,7 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
   let response: Response;
   try {
     const isAbsoluteURL = /^https?:\/\//i.test(path);
+    // Force the use of the absolute BASE_URL for all relative paths so Vercel doesn't hit its own static files
     const requestUrl = isAbsoluteURL
       ? path
       : `${BASE_URL.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
@@ -49,6 +56,8 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
     response = await fetch(requestUrl, {
       ...options,
       headers,
+      credentials: options.credentials || "include", // Required for cross-origin cookies/auth
+      mode: "cors",
     });
   } catch (error) {
     throw new ApiError(
@@ -57,7 +66,7 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
     );
   }
 
-  // Handle non-2xx HTTP status codes
+  // Handle non-2xx HTTP status codes safely without crashing on empty JSON
   if (!response.ok) {
     let errorData: any = {};
     try {
@@ -75,7 +84,7 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
     );
   }
 
-  // Handle successful responses
+  // Handle successful responses safely without crashing on empty JSON
   const text = await response.text();
   try {
     return (text ? JSON.parse(text) : {}) as unknown as T;
@@ -300,33 +309,17 @@ function getAuthHeader() {
 }
 
 export async function apiLogin(phone: string, otp: string) {
-  try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, otp }),
-    });
-    
-    let data: any = {};
-    const text = await response.text();
-    
-    if (text) {
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        data = { error: "Invalid JSON response from server." };
-      }
-    } else if (!response.ok) {
-      data = { error: "Login failed with an empty response from the server." };
-    }
+  return httpClient<any>("/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ phone, otp }),
+  });
+}
 
-    if (!response.ok) {
-      throw new Error(data.error || "Login failed");
-    }
-    return data;
-  } catch (error: any) {
-    throw error;
-  }
+export async function apiRegister(formData: any) {
+  return httpClient<any>("/api/v1/auth/register", {
+    method: "POST",
+    body: JSON.stringify(formData),
+  });
 }
 
 async function safeParseResponse(response: Response) {

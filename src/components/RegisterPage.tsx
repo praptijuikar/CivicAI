@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle2, User, Mail, Phone, Lock, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+import { apiRegister } from "../lib/api.ts";
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -28,29 +29,39 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      // Mock Registration Logic
-      const existingUsersStr = localStorage.getItem("civicai-users");
-      const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
+      let user;
+      let token;
       
-      const userExists = users.some((u: any) => u.email === formData.email || (formData.phone && u.phone === formData.phone));
-      if (userExists) {
-        throw new Error("User with this email or phone already exists.");
+      try {
+        const data = await apiRegister(formData);
+        user = data.user;
+        token = data.token;
+      } catch (err) {
+        console.warn("Backend registration failed, falling back to mock auth:", err);
+        // Mock Registration Logic
+        const existingUsersStr = localStorage.getItem("civicai-users");
+        const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
+        
+        const userExists = users.some((u: any) => u.email === formData.email || (formData.phone && u.phone === formData.phone));
+        if (userExists) {
+          throw new Error("User with this email or phone already exists.");
+        }
+        
+        user = {
+          id: `usr-${Date.now()}`,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || undefined,
+          role: "citizen",
+          tenantId: "municipality-sf",
+          reputationScore: 100,
+          createdAt: new Date().toISOString(),
+        };
+        
+        users.push({ ...user, password: formData.password });
+        localStorage.setItem("civicai-users", JSON.stringify(users));
+        token = `mock-token-${Date.now()}`;
       }
-      
-      const user = {
-        id: `usr-${Date.now()}`,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        role: "citizen",
-        tenantId: "municipality-sf",
-        reputationScore: 100,
-        createdAt: new Date().toISOString(),
-      };
-      
-      users.push({ ...user, password: formData.password });
-      localStorage.setItem("civicai-users", JSON.stringify(users));
-      const token = `mock-token-${Date.now()}`;
       
       // Store token
       localStorage.setItem("civicai-token", token as string);
