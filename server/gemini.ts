@@ -216,8 +216,11 @@ Evaluate:
 
         const verificationStatus = deriveVerificationStatus(effectiveConfidence);
 
+        // Bypass isValidScene false positives if the model is highly confident it found a civic issue
+        const finalIsValidScene = effectiveConfidence >= 0.8 ? true : Boolean(parsed.isValidScene);
+
         return {
-          isValidScene: Boolean(parsed.isValidScene),
+          isValidScene: finalIsValidScene,
           hasVisibleIssue: Boolean(parsed.hasVisibleIssue),
           primaryIssueDetected: parsed.primaryIssueDetected || "",
           isCategoryMismatch: Boolean(parsed.isCategoryMismatch),
