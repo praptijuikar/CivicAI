@@ -859,19 +859,29 @@ export default function CitizenPortal({
                         {(aiAnalysis.verificationStatus === "needs_review" || aiAnalysis.isCategoryMismatch) && (
                           <><AlertTriangle className="w-3 h-3" /> Needs Review</>
                         )}
-                        {(!aiAnalysis.isValidScene || !aiAnalysis.hasVisibleIssue || aiAnalysis.verificationStatus === "no_issue_detected" || !aiAnalysis.isAuthentic) && (
+                        {(!aiAnalysis.isValidScene || !aiAnalysis.hasVisibleIssue || aiAnalysis.verificationStatus === "no_issue_detected") && (
                           <><HelpCircle className="w-3 h-3" /> Triage Failed / Rejected</>
                         )}
                       </span>
                     )}
                   </div>
 
-                  {aiAnalysis && (!aiAnalysis.isValidScene || !aiAnalysis.isAuthentic) && (
+                  {aiAnalysis && !aiAnalysis.isValidScene && (
                     <div className="p-3 bg-red-950/40 border border-red-500 rounded-xl flex items-start gap-2">
                       <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                       <p className="text-sm font-semibold text-red-200">
                         <strong className="text-red-500 block mb-1">⚠️ Invalid Image Detected</strong>
-                        This photo appears to be a screenshot or web-downloaded image. Please upload an authentic photo of public infrastructure.
+                        This does not appear to be a valid public infrastructure scene. Please upload a clear photo of the issue.
+                      </p>
+                    </div>
+                  )}
+
+                  {aiAnalysis && !aiAnalysis.isAuthentic && aiAnalysis.isValidScene && (
+                    <div className="p-3 bg-amber-950/40 border border-amber-500/50 rounded-xl flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-semibold text-amber-200">
+                        <strong className="text-amber-500 block mb-1">Source Warning</strong>
+                        This photo appears to be a screenshot or web-downloaded image. You may still submit the report, but it will be flagged for manual review.
                         {aiAnalysis.authenticityReasoning && (
                           <span className="block mt-1 opacity-80 text-xs font-mono">{aiAnalysis.authenticityReasoning}</span>
                         )}
@@ -1034,7 +1044,7 @@ export default function CitizenPortal({
                 <button
                   type="button"
                   onClick={handleInitiateSubmission}
-                  disabled={isCheckingDuplicates || isSubmittingReport || (aiAnalysis && (!aiAnalysis.isValidScene || !aiAnalysis.isAuthentic))}
+                  disabled={isCheckingDuplicates || isSubmittingReport || (aiAnalysis && !aiAnalysis.isValidScene)}
                   className="px-6 py-2.5 rounded-xl bg-saffron hover:bg-saffron/90 text-foreground font-bold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCheckingDuplicates || isSubmittingReport ? (
