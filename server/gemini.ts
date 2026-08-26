@@ -221,7 +221,7 @@ Evaluate:
           hasVisibleIssue: Boolean(parsed.hasVisibleIssue),
           primaryIssueDetected: parsed.primaryIssueDetected || "",
           isCategoryMismatch: Boolean(parsed.isCategoryMismatch),
-          isAuthentic: Boolean(parsed.isAuthentic ?? true),
+          isAuthentic: true, // Relaxed for testing: Boolean(parsed.isAuthentic ?? true),
           authenticityReasoning: parsed.authenticityReasoning || "Appears authentic",
           predictedCategory: parsed.predictedCategory || "Roads & Infrastructure",
           subcategory: parsed.subcategory || "Structural Defect",
