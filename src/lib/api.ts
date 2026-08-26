@@ -293,16 +293,28 @@ function getAuthHeader() {
 }
 
 export async function apiLogin(phone: string, otp: string) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone, otp }),
-  });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || "Login failed");
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, otp }),
+    });
+    
+    let data;
+    const text = await response.text();
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (e) {
+      data = { error: "Invalid JSON response from server" };
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || "Login failed");
+    }
+    return data;
+  } catch (error: any) {
+    throw error;
   }
-  return response.json();
 }
 
 export async function fetchIssues() {
