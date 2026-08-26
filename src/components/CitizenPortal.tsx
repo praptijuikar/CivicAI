@@ -849,7 +849,7 @@ export default function CitizenPortal({
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border flex items-center gap-1 ${
                         aiAnalysis.verificationStatus === "verified" && aiAnalysis.isValidScene && aiAnalysis.hasVisibleIssue && !aiAnalysis.isCategoryMismatch
                           ? "bg-emerald-950/60 text-emerald-300 border-emerald-700"
-                          : aiAnalysis.verificationStatus === "needs_review" || aiAnalysis.isCategoryMismatch
+                          : aiAnalysis.verificationStatus === "needs_review" || aiAnalysis.isCategoryMismatch || !aiAnalysis.isValidScene || !aiAnalysis.hasVisibleIssue || aiAnalysis.verificationStatus === "no_issue_detected"
                             ? "bg-amber-950/60 text-amber-300 border-amber-700"
                             : "bg-red-950/60 text-red-300 border-red-700"
                       }`}>
@@ -860,18 +860,18 @@ export default function CitizenPortal({
                           <><AlertTriangle className="w-3 h-3" /> Needs Review</>
                         )}
                         {(!aiAnalysis.isValidScene || !aiAnalysis.hasVisibleIssue || aiAnalysis.verificationStatus === "no_issue_detected") && (
-                          <><HelpCircle className="w-3 h-3" /> Triage Failed / Rejected</>
+                          <><HelpCircle className="w-3 h-3" /> Triage Inconclusive</>
                         )}
                       </span>
                     )}
                   </div>
 
                   {aiAnalysis && !aiAnalysis.isValidScene && (
-                    <div className="p-3 bg-red-950/40 border border-red-500 rounded-xl flex items-start gap-2">
-                      <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm font-semibold text-red-200">
-                        <strong className="text-red-500 block mb-1">⚠️ Invalid Image Detected</strong>
-                        This does not appear to be a valid public infrastructure scene. Please upload a clear photo of the issue.
+                    <div className="p-3 bg-amber-950/40 border border-amber-500/50 rounded-xl flex items-start gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm font-semibold text-amber-200">
+                        <strong className="text-amber-500 block mb-1">Scene Warning</strong>
+                        This does not appear to be a standard public infrastructure scene. You may still submit the report, but it will require manual review.
                       </p>
                     </div>
                   )}
@@ -1044,7 +1044,7 @@ export default function CitizenPortal({
                 <button
                   type="button"
                   onClick={handleInitiateSubmission}
-                  disabled={isCheckingDuplicates || isSubmittingReport || (aiAnalysis && !aiAnalysis.isValidScene)}
+                  disabled={isCheckingDuplicates || isSubmittingReport}
                   className="px-6 py-2.5 rounded-xl bg-saffron hover:bg-saffron/90 text-foreground font-bold text-xs shadow-lg shadow-cyan-600/30 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isCheckingDuplicates || isSubmittingReport ? (
