@@ -49,13 +49,16 @@ export default function AuthorityDashboard({
   const [crisisMode, setCrisisMode] = useState(false);
   const [allocation, setAllocation] = useState<Awaited<ReturnType<typeof api.allocateBudget>>["allocation"] | null>(null);
   const [isAllocating, setIsAllocating] = useState(false);
+  // Fallback to empty array if issues is undefined or null
+  const safeIssues = issues || [];
+
   // Filter & Sort Logic
-  const filteredIssues = issues
+  const filteredIssues = safeIssues
     .filter((issue) => {
       const matchesSearch =
-        issue.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (issue.locationAddress &&
+        issue?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        issue?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (issue?.locationAddress &&
           issue.locationAddress.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesStatus =
         selectedStatus === "ALL" || issue.status === selectedStatus;
@@ -93,7 +96,7 @@ export default function AuthorityDashboard({
           <div>
             <p className="text-xs text-foreground/60 font-medium">{t('Total Assigned')}</p>
             <p className="text-2xl font-bold text-foreground font-mono mt-1">
-              {issues.length}
+              {safeIssues.length}
             </p>
           </div>
           <ShieldAlert className="w-8 h-8 text-ashoka-navy dark:text-ashoka-navy opacity-80" />
@@ -103,7 +106,7 @@ export default function AuthorityDashboard({
           <div>
             <p className="text-xs text-foreground/60 font-medium">{t('In Progress')}</p>
             <p className="text-2xl font-bold text-amber-400 font-mono mt-1">
-              {issues.filter((i) => i.status === "in_progress").length}
+              {safeIssues.filter((i) => i?.status === "in_progress").length}
             </p>
           </div>
           <Clock className="w-8 h-8 text-amber-400 opacity-80" />
@@ -113,7 +116,7 @@ export default function AuthorityDashboard({
           <div>
             <p className="text-xs text-foreground/60 font-medium">{t('Critical Urgency')}</p>
             <p className="text-2xl font-bold text-rose-400 font-mono mt-1">
-              {issues.filter((i) => i.severity === "Critical").length}
+              {safeIssues.filter((i) => i?.severity === "Critical").length}
             </p>
           </div>
           <AlertTriangle className="w-8 h-8 text-rose-400 opacity-80" />

@@ -1,0 +1,6 @@
+{
+  "name": "CivicAI - Civic Accountability Platform",
+  "description": "An AI-assisted civic accountability platform featuring multi-role portals (Citizen, Civic Integrity, Authority/Admin, Field Officer), Gemini visual triage, automated routing, duplicate prevention, and tamper-proof evidence auditing.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
