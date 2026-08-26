@@ -217,3 +217,9 @@
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
+/* Fix for dropdown options text color in dark/light mode */
+select option {
+  color: #111827;
+  background-color: #ffffff;
+}
+

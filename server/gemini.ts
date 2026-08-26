@@ -210,9 +210,13 @@ Evaluate:
             ? parsed.sceneRelevance
             : "uncertain";
 
-        // If scene is non-infrastructure, force low confidence regardless of model output
+        // If scene is non-infrastructure, force low confidence unless the model is highly confident
+        // (>= 80%) that there is a civic issue, preventing high-confidence reports from being 
+        // locked out due to camera angle bias.
         const effectiveConfidence =
-          sceneRelevance === "non_infrastructure" ? Math.min(rawConfidence, 0.15) : rawConfidence;
+          (sceneRelevance === "non_infrastructure" && rawConfidence < 0.8) 
+            ? Math.min(rawConfidence, 0.15) 
+            : rawConfidence;
 
         const verificationStatus = deriveVerificationStatus(effectiveConfidence);
 
