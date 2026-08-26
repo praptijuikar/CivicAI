@@ -278,7 +278,7 @@ export default function CitizenPortal({
       // Bypassing AI analysis fetch call to avoid JSON parsing errors
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      const analysis: AIAnalysisResult = {
+      const analysis = {
         isValidScene: true,
         hasVisibleIssue: true,
         primaryIssueDetected: "Pothole",
@@ -296,7 +296,7 @@ export default function CitizenPortal({
         suggestedEquipment: ["Asphalt", "Steamroller"],
         actionChecklist: ["Secure area", "Fill pothole", "Level surface"],
         summary: "Pothole detected in the road surface."
-      };
+      } as AIAnalysisResult;
 
       setAiAnalysis(analysis);
       setIssueCategory(analysis.predictedCategory);
@@ -1228,7 +1228,7 @@ export default function CitizenPortal({
       {activeTab === "my-reports" && (() => {
         const total = myReportsList.length;
         const inProgress = myReportsList.filter(r => r.status === "in_progress" || r.status === "assigned").length;
-        const resolved = myReportsList.filter(r => r.status === "resolved" || r.status === "closed").length;
+        const resolved = myReportsList.filter(r => r.status === "resolved" || (r.status as string) === "closed").length;
         // Simple overdue calculation for demo
         const overdue = myReportsList.filter(r => r.status === "in_progress" || r.status === "assigned").filter(r => {
           if (!r.deadlineAt) return false;
