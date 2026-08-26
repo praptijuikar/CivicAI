@@ -43,7 +43,7 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 text-[#F8FAFC] flex items-center justify-center relative overflow-hidden z-10">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] px-4 py-10 text-slate-900 dark:text-[#F8FAFC] flex items-center justify-center relative overflow-hidden z-10 transition-colors duration-300">
       {/* Background glows */}
       <div className="absolute top-[15%] left-[5%] h-[35vw] w-[35vw] rounded-full bg-[#6366F1]/5 blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[10%] right-[10%] h-[30vw] w-[30vw] rounded-full bg-[#00F2FE]/5 blur-[120px] pointer-events-none" />
@@ -75,7 +75,7 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl font-black tracking-tight text-[#F8FAFC]">
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-[#F8FAFC]">
             Admin Login
           </h2>
           <p className="mt-1.5 text-sm text-foreground/60">
@@ -86,7 +86,7 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             {/* Admin ID Field */}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/60 mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">
                 Admin ID
               </label>
               <input
@@ -95,17 +95,17 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                 onChange={(e) => setAdminId(e.target.value)}
                 autoComplete="username"
                 placeholder="Enter admin ID"
-                className="w-full rounded-xl border border-border-subtle hover:border-foreground/20 bg-surface/[0.04] px-4 py-3 text-sm text-[#F8FAFC] placeholder:text-[#475569] outline-none transition-all duration-200 focus:border-saffron focus:ring-2 focus:ring-saffron/50 focus:bg-surface/[0.06]"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50"
               />
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/60 mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-2">
                 Password
               </label>
               <div className="relative">
-                <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#475569]" />
+                <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   required
                   type={showPassword ? "text" : "password"}
@@ -113,12 +113,12 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   placeholder="Enter password"
-                  className="w-full rounded-xl border border-border-subtle hover:border-foreground/20 bg-surface/[0.04] py-3 pl-10 pr-12 text-sm text-[#F8FAFC] placeholder:text-[#475569] outline-none transition-all duration-200 focus:border-saffron focus:ring-2 focus:ring-saffron/50 focus:bg-surface/[0.06]"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-slate-50 dark:bg-slate-800/50 py-3 pl-10 pr-12 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#475569] hover:text-foreground/60 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -134,7 +134,7 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs text-rose-400 font-medium"
+                className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-600 dark:text-red-400 font-medium"
                 role="alert"
               >
                 {error}
@@ -144,7 +144,7 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
             {/* Submit Button */}
             <button
               disabled={isSubmitting}
-              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#818CF8] py-3.5 text-sm font-bold text-foreground transition-all duration-300 hover:shadow-lg hover:shadow-[#6366F1]/25 hover:brightness-110 disabled:cursor-wait disabled:opacity-60 active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#818CF8] py-3.5 text-sm font-bold text-white transition-all duration-300 hover:shadow-lg hover:shadow-[#6366F1]/25 hover:brightness-110 disabled:cursor-wait disabled:opacity-60 active:scale-[0.98]"
             >
               {isSubmitting ? (
                 <>
@@ -160,14 +160,26 @@ export default function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
             </button>
           </form>
 
-          {/* Default credentials hint */}
-          <div className="mt-6 rounded-xl border border-[#00F2FE]/10 bg-[#00F2FE]/[0.03] px-4 py-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#00F2FE] mb-1.5">
-              Default Credentials
-            </p>
-            <p className="text-xs text-foreground/60 font-mono">
-              ID: <span className="text-[#F8FAFC] font-semibold">prapti.j</span> &nbsp;|&nbsp; Password: <span className="text-[#F8FAFC] font-semibold">Scram440</span>
-            </p>
+          {/* Default credentials hint & Fill Button */}
+          <div className="mt-6 rounded-xl border border-[#00F2FE]/20 bg-[#00F2FE]/5 px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#00F2FE] mb-1.5">
+                Default Credentials
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
+                ID: <span className="text-slate-900 dark:text-slate-100 font-semibold">prapti.j</span> &nbsp;|&nbsp; Password: <span className="text-slate-900 dark:text-slate-100 font-semibold">Scram440</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setAdminId(DEFAULT_ADMIN_ID);
+                setPassword(DEFAULT_ADMIN_PASSWORD);
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
+            >
+              Fill Demo Credentials
+            </button>
           </div>
 
           {/* Back link */}
