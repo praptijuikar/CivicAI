@@ -1,20 +1,40 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# CivicAI - Civic Accountability & Governance Platform
 
-# Run and deploy your AI Studio app
+An advanced, zero-documentation civic tech platform designed for frictionless reporting, AI triage, and integrity protection.
 
-This contains everything you need to run your app locally.
+## Features Included
+- **Dual-Pathway Dashboard**: Clear pathways for "Departmental Service Hub" and "Integrity & Legal Shield".
+- **Frictionless Auth**: Simulated phone-based OTP login.
+- **Smart Reporting**: Connects to an Express backend for issue submission and status tracking.
+- **Legal Automation**: Displays a 21-day statutory countdown timer for all open civic reports.
+- **Status Tracker**: Linear visual status tracking (Submitted &rarr; In Progress &rarr; Resolved &rarr; Escalated).
 
-View your app in AI Studio: https://ai.studio/apps/dacbddf6-c3e7-4f46-8e6c-bf60d81fb228
+## Local Setup
 
-## Run Locally
+**Prerequisites**: Node.js 18+
 
-**Prerequisites:**  Node.js
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
+2. **Environment Configuration**
+   - Create a `.env.local` or `.env` file in the root directory.
+   - Set the following variables (e.g., your Gemini API key for AI features):
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+3. **Start the Application**
+   Run the following command to start both the Vite React frontend and the Express backend concurrently:
+   ```bash
+   npm run dev
+   ```
+
+4. **Access the Platform**
+   - **Frontend**: http://localhost:5173
+   - **Backend**: API runs concurrently on http://localhost:3000
+
+## Quick Demo Accounts
+- **Citizen Login**: Click the "Auto-fill Credentials" on the Citizen Login page (Simulates any Phone + 6-digit OTP).
+- **Admin/Officer Login**: Use the predefined credentials shown on the Admin Login Portal.

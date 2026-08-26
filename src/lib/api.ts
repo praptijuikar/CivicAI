@@ -280,3 +280,94 @@ export const api = {
   getOfficers: (): Promise<{ officers: User[] }> =>
     httpClient("/api/v1/officers"),
 };
+
+// ==========================================
+// Standalone exported functions for updated components
+// ==========================================
+
+const API_BASE = "/api/v1";
+
+function getAuthHeader() {
+  const token = localStorage.getItem("civicai-token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function apiLogin(phone: string, otp: string) {
+  const response = await fetch(`${API_BASE}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone, otp }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || "Login failed");
+  }
+  return response.json();
+}
+
+export async function fetchIssues() {
+  const response = await fetch(`${API_BASE}/issues`, {
+    headers: getAuthHeader(),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch issues");
+  }
+  return response.json();
+}
+
+export async function submitCivicIssue(payload: any) {
+  const response = await fetch(`${API_BASE}/issues`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || "Failed to submit issue");
+  }
+  return response.json();
+}
+
+export async function updateIssueStatus(id: string, status: string, notes?: string) {
+  const response = await fetch(`${API_BASE}/issues/${id}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify({ status, notes }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || "Failed to update status");
+  }
+  return response.json();
+}
+
+export async function upvoteIssue(id: string) {
+  const response = await fetch(`${API_BASE}/issues/${id}/upvote`, {
+    method: "POST",
+    headers: getAuthHeader(),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.error || "Failed to upvote issue");
+  }
+  return response.json();
+}
+
+export async function analyzeImage(imageBase64: string, mimeType: string = "image/jpeg") {
+  const response = await fetch(`${API_BASE}/issues/analyze-image`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageBase64, mimeType }),
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.message || data.error || "Failed to analyze image");
+  }
+  return response.json();
+}

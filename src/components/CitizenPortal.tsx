@@ -17,6 +17,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, useSpring } from "motion/react";
+import { submitCivicIssue, analyzeImage } from "../lib/api";
 
 interface TiltBentoCardProps {
   children: React.ReactNode;
@@ -124,6 +125,7 @@ export default function CitizenPortal({
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
 
   // Form Fields
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [issueTitle, setIssueTitle] = useState("");
   const [issueCategory, setIssueCategory] = useState("");
   const [issueSubcategory, setIssueSubcategory] = useState("");
@@ -275,43 +277,8 @@ export default function CitizenPortal({
     setIsAnalyzingImage(true);
 
     try {
-      // Bypassing AI analysis fetch call to avoid JSON parsing errors
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      let isInvalidScene = false;
-      let isSuspicious = false;
-      let authenticityReasoning = "EXIF data matches GPS location and capture time.";
-      let confidence = 0.95;
-
-      const lowerName = fileName.toLowerCase();
-      if (lowerName.match(/screenshot|screen|capture|terminal|code|image_|problem/)) {
-        isInvalidScene = true;
-        confidence = 0.25;
-      } else if (lowerName.match(/download|stock|dreamstime|shutterstock|unsplash|google|preview/)) {
-        isSuspicious = true;
-        authenticityReasoning = "Downloaded web/stock photo detected. Metadata mismatch.";
-        confidence = 0.35;
-      }
-
-      const analysis = {
-        isValidScene: !isInvalidScene,
-        hasVisibleIssue: !isInvalidScene && !isSuspicious,
-        primaryIssueDetected: isInvalidScene ? "None" : "Pothole",
-        isCategoryMismatch: false,
-        isAuthentic: !isSuspicious,
-        authenticityReasoning,
-        predictedCategory: "Infrastructure",
-        subcategory: "Road Repair",
-        confidence,
-        severity: "High",
-        calculatedPriorityScore: 90,
-        safetyRisks: ["Vehicle damage", "Trip hazard"],
-        recommendedDepartment: "Public Works",
-        estimatedResolutionHours: 24,
-        suggestedEquipment: ["Asphalt", "Steamroller"],
-        actionChecklist: ["Secure area", "Fill pothole", "Level surface"],
-        summary: "Pothole detected in the road surface."
-      } as AIAnalysisResult;
+      const response = await analyzeImage(base64OrUrl);
+      const analysis = response.analysis as AIAnalysisResult;
 
       setAiAnalysis(analysis);
       setIssueCategory(analysis.predictedCategory);
@@ -394,22 +361,13 @@ export default function CitizenPortal({
         reporterName: currentUser.name,
         website: "",
         sourceLanguage: language,
+        isAnonymous
       };
 
-      // Bypass backend issue submission
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      const report: CivicIssue = {
-        ...complaintPayload,
-        id: `CIV-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: "submitted",
-        upvotesCount: 0
-      } as CivicIssue;
+      const { issue } = await submitCivicIssue(complaintPayload);
 
-      onReportCreated(report);
-      setCreatedIssueId(report.id);
+      onReportCreated(issue);
+      setCreatedIssueId(issue.id);
       setReportStep("success");
       confetti({
         particleCount: 100,
@@ -424,22 +382,20 @@ export default function CitizenPortal({
     }
   };
 
-  // Handle +1 Upvote from Duplicate Intercept Modal
   const handleConfirmDuplicateUpvote = async (targetIssueId: string) => {
-    const issue = loadDemoReports().find((existing) => existing.id === targetIssueId);
-    if (!issue) return;
-    const updated = updateDemoReport({
-      ...issue,
-      upvotes: issue.upvotes + 1,
-      upvotesCount: issue.upvotesCount + 1,
-      updatedAt: new Date().toISOString(),
-    }).find((existing) => existing.id === targetIssueId);
-    if (!updated) return;
-    confetti({ particleCount: 80, spread: 50 });
-    onRefreshIssues();
-    onSelectIssue(updated);
-    setReportStep("media");
-    setActiveTab("my-reports");
+    try {
+      const response = await fetch(`/api/v1/issues/${targetIssueId}/upvote`, {
+        method: "POST",
+      });
+      if (response.ok) {
+        confetti({ particleCount: 80, spread: 50 });
+        onRefreshIssues();
+        setReportStep("media");
+        setActiveTab("my-reports");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const myReportsList = issues.filter((i) => i.userId === currentUser.id);
@@ -559,7 +515,7 @@ export default function CitizenPortal({
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                  Report Public Defect
+                  Departmental Service Hub
                   <ArrowRight className="w-4 h-4 text-[#00F2FE] group-hover:translate-x-1 transition" />
                 </h3>
                 <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
@@ -593,7 +549,7 @@ export default function CitizenPortal({
                   </span>
                 </div>
                 <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                  Integrity Vault
+                  Integrity & Legal Shield
                   <ArrowRight className="w-4 h-4 text-[#6366F1] group-hover:translate-x-1 transition" />
                 </h3>
                 <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
@@ -1043,6 +999,19 @@ export default function CitizenPortal({
               </div>
 
               {/* Action Buttons */}
+              <div className="flex items-center gap-3 py-3 border-t border-border-subtle mt-4">
+                <input
+                  type="checkbox"
+                  id="anonymous-toggle"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="w-4 h-4 rounded text-saffron bg-background border-border-subtle"
+                />
+                <label htmlFor="anonymous-toggle" className="text-xs font-semibold text-foreground/80 cursor-pointer select-none">
+                  Submit Anonymously
+                </label>
+              </div>
+
               <input
                 name="website"
                 type="text"
@@ -1233,10 +1202,10 @@ export default function CitizenPortal({
       {/* TAB 3: MY REPORTS LIST */}
       {activeTab === "my-reports" && (() => {
         const total = myReportsList.length;
-        const inProgress = myReportsList.filter(r => r.status === "in_progress" || r.status === "assigned").length;
-        const resolved = myReportsList.filter(r => r.status === "resolved" || (r.status as string) === "closed").length;
+        const inProgress = myReportsList.filter(r => r.status === "in_progress").length;
+        const resolved = myReportsList.filter(r => r.status === "resolved").length;
         // Simple overdue calculation for demo
-        const overdue = myReportsList.filter(r => r.status === "in_progress" || r.status === "assigned").filter(r => {
+        const overdue = myReportsList.filter(r => r.status === "in_progress").filter(r => {
           if (!r.deadlineAt) return false;
           return new Date(r.deadlineAt) < new Date();
         }).length;
@@ -1283,38 +1252,64 @@ export default function CitizenPortal({
             </div>
           ) : (
             <div className="space-y-3">
-              {myReportsList.map((issue) => (
+              {myReportsList.map((issue) => {
+                const createdAtDate = new Date(issue.createdAt);
+                const statutoryDeadline = new Date(createdAtDate.getTime() + 21 * 24 * 60 * 60 * 1000);
+                const remainingDays = Math.max(0, Math.ceil((statutoryDeadline.getTime() - new Date().getTime()) / (1000 * 3600 * 24)));
+                const isResolved = issue.status === "resolved";
+                
+                return (
                 <div
                   key={issue.id}
                   onClick={() => onSelectIssue(issue)}
-                  className="cursor-pointer p-4 rounded-2xl bg-surface shadow-md shadow-md border border-border-subtle hover:border-border-subtle hover:border-foreground/20 transition flex items-center justify-between gap-4"
+                  className="cursor-pointer p-4 rounded-2xl bg-surface shadow-md border border-border-subtle hover:border-foreground/20 transition flex flex-col gap-3"
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    {issue.initialImageUrl ? (
-                      <img
-                        src={issue.initialImageUrl}
-                        alt={issue.title}
-                        className="w-14 h-14 rounded-xl object-cover border border-border-subtle shrink-0"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-xl bg-background flex items-center justify-center text-foreground/60 shrink-0">
-                        <Camera className="w-5 h-5" />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      {issue.initialImageUrl ? (
+                        <img
+                          src={issue.initialImageUrl}
+                          alt={issue.title}
+                          className="w-14 h-14 rounded-xl object-cover border border-border-subtle shrink-0"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-background flex items-center justify-center text-foreground/60 shrink-0">
+                          <Camera className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-ashoka-navy dark:text-ashoka-navy font-bold">{issue.id}</span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-background text-foreground/80 border border-border-subtle">
+                            {issue.status}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-foreground truncate">{issue.title}</h4>
+                        <p className="text-[11px] text-foreground/60 truncate">{issue.address}</p>
+                      </div>
+                    </div>
+                    {!isResolved && (
+                      <div className="shrink-0 text-right">
+                        <div className="text-[10px] uppercase font-bold text-foreground/60 tracking-wider">Statutory Limit</div>
+                        <div className={`text-sm font-bold ${remainingDays < 5 ? "text-red-500" : "text-amber-500"}`}>
+                          {remainingDays} Days Left
+                        </div>
                       </div>
                     )}
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-ashoka-navy dark:text-ashoka-navy font-bold">{issue.id}</span>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-background text-foreground/80 border border-border-subtle hover:border-foreground/20">
-                          {issue.status}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-bold text-foreground truncate">{issue.title}</h4>
-                      <p className="text-[11px] text-foreground/60 truncate">{issue.address}</p>
-                    </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-foreground/60 shrink-0" />
+                  
+                  {/* Status Tracker */}
+                  <div className="flex items-center justify-between mt-2 pt-3 border-t border-border-subtle/50 text-[9px] font-bold uppercase tracking-wider text-foreground/40">
+                    <span className={issue.status === "submitted" || issue.status === "in_progress" || isResolved || issue.status === "escalated" ? "text-blue-500" : ""}>Submitted</span>
+                    <span className="flex-1 h-px bg-border-subtle mx-2" />
+                    <span className={issue.status === "in_progress" || isResolved || issue.status === "escalated" ? "text-amber-500" : ""}>In Progress</span>
+                    <span className="flex-1 h-px bg-border-subtle mx-2" />
+                    <span className={isResolved ? "text-india-green" : ""}>Resolved</span>
+                    <span className="flex-1 h-px bg-border-subtle mx-2" />
+                    <span className={issue.status === "escalated" ? "text-red-500" : ""}>Escalated</span>
+                  </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
           </div>
@@ -1330,43 +1325,67 @@ export default function CitizenPortal({
           </div>
 
           <div className="space-y-3">
-            {issues.map((issue) => (
+            {issues.map((issue) => {
+              const createdAtDate = new Date(issue.createdAt);
+              const statutoryDeadline = new Date(createdAtDate.getTime() + 21 * 24 * 60 * 60 * 1000);
+              const remainingDays = Math.max(0, Math.ceil((statutoryDeadline.getTime() - new Date().getTime()) / (1000 * 3600 * 24)));
+              const isResolved = issue.status === "resolved";
+              
+              return (
               <div
                 key={issue.id}
                 onClick={() => onSelectIssue(issue)}
-                className="cursor-pointer p-4 rounded-2xl bg-surface shadow-md shadow-md border border-border-subtle hover:border-border-subtle hover:border-foreground/20 transition flex items-center justify-between gap-4"
+                className="cursor-pointer p-4 rounded-2xl bg-surface shadow-md border border-border-subtle hover:border-foreground/20 transition flex flex-col gap-3"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  {issue.initialImageUrl ? (
-                    <img
-                      src={issue.initialImageUrl}
-                      alt={issue.title}
-                      className="w-16 h-16 rounded-xl object-cover border border-border-subtle shrink-0"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl bg-background flex items-center justify-center text-foreground/60 shrink-0">
-                      <Camera className="w-6 h-6" />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    {issue.initialImageUrl ? (
+                      <img
+                        src={issue.initialImageUrl}
+                        alt={issue.title}
+                        className="w-16 h-16 rounded-xl object-cover border border-border-subtle shrink-0"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-background flex items-center justify-center text-foreground/60 shrink-0">
+                        <Camera className="w-6 h-6" />
+                      </div>
+                    )}
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-ashoka-navy dark:text-ashoka-navy font-bold">{issue.id}</span>
+                        <span className="text-[10px] text-foreground/60">• {issue.category}</span>
+                      </div>
+                      <h4 className="text-xs font-bold text-foreground truncate">{issue.title}</h4>
+                      <p className="text-[11px] text-foreground/60 truncate">{issue.address}</p>
                     </div>
-                  )}
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-ashoka-navy dark:text-ashoka-navy font-bold">{issue.id}</span>
-                      <span className="text-[10px] text-foreground/60">• {issue.category}</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-foreground truncate">{issue.title}</h4>
-                    <p className="text-[11px] text-foreground/60 truncate">{issue.address}</p>
+                  </div>
+                  <div className="text-right shrink-0 space-y-1">
+                    {!isResolved && (
+                      <div className={`text-[10px] font-bold ${remainingDays < 5 ? "text-red-500" : "text-amber-500"}`}>
+                        {remainingDays} Days Left
+                      </div>
+                    )}
+                    <span className="text-[10px] text-ashoka-navy dark:text-ashoka-navy font-mono block">
+                      Upvotes: {issue.upvotesCount}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-background text-foreground/80 border border-border-subtle hover:border-foreground/20">
+                      {issue.status}
+                    </span>
                   </div>
                 </div>
-                <div className="text-right shrink-0 space-y-1">
-                  <span className="text-[10px] text-ashoka-navy dark:text-ashoka-navy font-mono block">
-                    Upvotes: {issue.upvotesCount}
-                  </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-background text-foreground/80 border border-border-subtle hover:border-foreground/20">
-                    {issue.status}
-                  </span>
+                
+                {/* Status Tracker */}
+                <div className="flex items-center justify-between mt-2 pt-3 border-t border-border-subtle/50 text-[9px] font-bold uppercase tracking-wider text-foreground/40">
+                  <span className={issue.status === "submitted" || issue.status === "in_progress" || isResolved || issue.status === "escalated" ? "text-blue-500" : ""}>Submitted</span>
+                  <span className="flex-1 h-px bg-border-subtle mx-2" />
+                  <span className={issue.status === "in_progress" || isResolved || issue.status === "escalated" ? "text-amber-500" : ""}>In Progress</span>
+                  <span className="flex-1 h-px bg-border-subtle mx-2" />
+                  <span className={isResolved ? "text-india-green" : ""}>Resolved</span>
+                  <span className="flex-1 h-px bg-border-subtle mx-2" />
+                  <span className={issue.status === "escalated" ? "text-red-500" : ""}>Escalated</span>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       )}

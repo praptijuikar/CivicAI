@@ -332,36 +332,46 @@ async function startServer() {
   });
 
   app.post("/api/v1/auth/login", (req, res) => {
-    const { email, password, identifier, passcode } = req.body;
-    const suppliedEmail = (email || identifier || "").trim();
-    const suppliedPassword = password || passcode || "";
+    const { phone, otp, email, password } = req.body;
     
-    if (!suppliedEmail || !suppliedPassword) {
-      return res.status(400).json({ error: "Credentials required" });
-    }
-
-    // Admin fallback for demo
-    if (suppliedEmail === DEMO_ADMIN_ID && bcrypt.compareSync(suppliedPassword, DEMO_ADMIN_PASSWORD_HASH)) {
+    // Legacy support for admin
+    if (email === DEMO_ADMIN_ID && bcrypt.compareSync(password || "", DEMO_ADMIN_PASSWORD_HASH)) {
       const admin = USERS.find((u) => u.role === "admin");
       if (admin) {
         return res.json({ token: signSession(admin.id), user: admin });
       }
     }
 
-    const user = USERS.find((u) => u.email === suppliedEmail);
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    if (!phone || !otp) {
+      return res.status(400).json({ error: "Phone and OTP required" });
     }
 
-    // We check `user.passwordHash` which we added to our User type dynamically for the demo
-    const hash = (user as any).passwordHash;
-    if (!hash || !bcrypt.compareSync(suppliedPassword, hash)) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    // OTP Simulation: Accept any 6 digit OTP for the phone number
+    if (otp.length !== 6) {
+      return res.status(401).json({ error: "Invalid OTP format. Must be 6 digits." });
+    }
+
+    let user = USERS.find((u) => u.phone === phone);
+    if (!user) {
+      // Auto-register citizen on first OTP login
+      const year = new Date().getFullYear();
+      const rand = Math.floor(10000 + Math.random() * 90000);
+      user = {
+        id: `USR-${year}-${rand}`,
+        name: "Civic Resident",
+        email: "",
+        phone: phone,
+        role: "citizen",
+        tenantId: DEFAULT_TENANT_ID,
+        reputationScore: 100,
+        createdAt: new Date().toISOString(),
+      };
+      USERS.push(user);
     }
 
     res.json({
       token: signSession(user.id),
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: { id: user.id, name: user.name, phone: user.phone, role: user.role }
     });
   });
 
@@ -718,156 +728,38 @@ async function startServer() {
     res.json({ issue, message: "+1 Upvote recorded. Urgency boosted." });
   });
 
-  app.patch("/api/v1/issues/:id/assign", requireAuth, requireRole("admin"), (req, res) => {
-    const { department, officerId, officerName, slaHours, deadlineAt, adminNotes } = req.body;
+  app.patch("/api/v1/issues/:id/status", requireAuth, requireRole("admin", "officer"), (req, res) => {
+    const { status, notes } = req.body;
     const issue = db.getIssueById(req.params.id, res.locals.tenantId);
-    if (!issue) {
-      return res.status(404).json({ error: "Issue not found" });
-    }
-    const now = new Date().toISOString();
-    const calculatedDeadline =
-      deadlineAt ||
-      new Date(Date.now() + (slaHours ? Number(slaHours) : 24) * 3600 * 1000).toISOString();
-
-    const historyEntry = {
-      id: `hist-${Date.now()}`,
-      timestamp: now,
-      action: "Officer & Department Assigned",
-      actorName: "Director Marcus Vance",
-      actorRole: "admin" as const,
-      details: `Assigned to ${department} (${officerName || "Field Crew"}). SLA: ${slaHours || 24} hours. ${adminNotes ? `Notes: ${adminNotes}` : ""}`,
-    };
-
-    const updated = db.updateIssue(req.params.id, {
-      status: "assigned",
-      assignedDepartment: department || issue.assignedDepartment,
-      assignedOfficerId: officerId,
-      assignedOfficerName: officerName,
-      assignedAt: now,
-      deadlineAt: calculatedDeadline,
-      slaHours: slaHours ? Number(slaHours) : 24,
-      history: [...issue.history, historyEntry],
-    }, res.locals.user.id);
-
-    res.json({ issue: updated, message: "Field officer successfully assigned" });
-  });
-
-  app.patch("/api/v1/issues/:id/start-work", requireAuth, requireRole("admin"), (req, res) => {
-    const { officerName, beforeImageUrl } = req.body;
-    const issue = db.getIssueById(req.params.id, res.locals.tenantId);
-    if (!issue) {
-      return res.status(404).json({ error: "Issue not found" });
-    }
+    if (!issue) return res.status(404).json({ error: "Issue not found" });
 
     const now = new Date().toISOString();
     const historyEntry = {
       id: `hist-${Date.now()}`,
       timestamp: now,
-      action: "Field Work Commenced",
-      actorName: officerName || issue.assignedOfficerName || "Field Officer",
-      actorRole: "officer" as const,
-      details: "Officer arrived on site and initiated structural remediation.",
+      action: `Status changed to ${status}`,
+      actorName: res.locals.user.name || "Admin",
+      actorRole: res.locals.user.role,
+      details: notes || "Status updated.",
     };
 
-    const updated = db.updateIssue(req.params.id, {
-      status: "in_progress",
-      beforeImageUrl: beforeImageUrl || issue.beforeImageUrl,
+    const updatePayload: any = {
+      status,
       history: [...issue.history, historyEntry],
-    }, res.locals.user.id);
-
-    res.json({ issue: updated, message: "Issue marked in progress" });
-  });
-
-  app.post("/api/v1/issues/:id/resolve", requireAuth, requireRole("admin"), (req, res) => {
-    const { officerId, officerName, notes, afterImageUrl, materialsUsed } = req.body;
-    const issue = db.getIssueById(req.params.id, res.locals.tenantId);
-    if (!issue) {
-      return res.status(404).json({ error: "Issue not found" });
-    }
-
-    const now = new Date().toISOString();
-    const historyEntry = {
-      id: `hist-${Date.now()}`,
-      timestamp: now,
-      action: "Resolved & Inspected by Officer",
-      actorName: officerName || issue.assignedOfficerName || "Officer Sarah Chen",
-      actorRole: "officer" as const,
-      details: `Resolution completed: ${notes || "Standard repairs enacted."} Uploaded After Photo. Awaiting citizen verification.`,
     };
 
-    const updated = db.updateIssue(req.params.id, {
-      status: "resolved",
-      resolvedAt: now,
-      resolvedByOfficerId: officerId || issue.assignedOfficerId,
-      resolvedByOfficerName: officerName || issue.assignedOfficerName,
-      resolutionNotes: notes,
-      afterImageUrl: afterImageUrl || "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=600&auto=format&fit=crop&q=80",
-      materialsUsed: materialsUsed || ["Standard repair materials", "Inspection verification seal"],
-      verificationStatus: "pending",
-      history: [...issue.history, historyEntry],
-    }, res.locals.user.id);
+    if (status === "escalated") {
+      updatePayload.priorityScore = Math.min(100, issue.priorityScore + 20);
+    } else if (status === "resolved") {
+      updatePayload.resolvedAt = now;
+      updatePayload.resolutionNotes = notes;
+    }
 
-    res.json({ issue: updated, message: "Issue resolved. Citizen verification notification sent." });
+    const updated = db.updateIssue(req.params.id, updatePayload, res.locals.user.id);
+    res.json({ issue: updated, message: `Issue status updated to ${status}` });
   });
 
-  app.post("/api/v1/issues/:id/verify", allowPublicAccess, (req, res) => {
-    const { isSatisfied, verificationNotes, citizenName } = req.body;
-    const issue = db.getIssueById(req.params.id, res.locals.tenantId);
-    if (!issue) {
-      return res.status(404).json({ error: "Issue not found" });
-    }
-    if (res.locals.user.role === "citizen" && !res.locals.isAnonymous && issue.userId !== res.locals.user.id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
 
-    const now = new Date().toISOString();
-
-    if (isSatisfied) {
-      const historyEntry = {
-        id: `hist-${Date.now()}`,
-        timestamp: now,
-        action: "Citizen Verified & Closed",
-        actorName: citizenName || issue.reporterName || "Aria Montgomery",
-        actorRole: "citizen" as const,
-        details: `Citizen confirmed satisfactory repair. ${verificationNotes ? `Feedback: "${verificationNotes}"` : ""}`,
-      };
-
-      const updated = db.updateIssue(req.params.id, {
-        status: "verified",
-        verificationStatus: "verified_citizen",
-        verifiedAt: now,
-        verificationNotes,
-        history: [...issue.history, historyEntry],
-      }, res.locals.user.id);
-
-      return res.json({
-        issue: updated,
-        message: "Resolution verified and ticket officially archived. Thank you!",
-      });
-    } else {
-      const historyEntry = {
-        id: `hist-${Date.now()}`,
-        timestamp: now,
-        action: "Resolution Disputed & Reopened",
-        actorName: citizenName || issue.reporterName || "Aria Montgomery",
-        actorRole: "citizen" as const,
-        details: `Citizen reported defect still persists. Dispute reason: "${verificationNotes || "Defect not adequately repaired."}". Escalated to supervisor.`,
-      };
-
-      const updated = db.updateIssue(req.params.id, {
-        status: "in_progress",
-        verificationStatus: "disputed",
-        disputeReason: verificationNotes,
-        priorityScore: Math.min(100, issue.priorityScore + 10),
-        history: [...issue.history, historyEntry],
-      }, res.locals.user.id);
-
-      return res.json({
-        issue: updated,
-        message: "Issue reopened and escalated to supervisor review.",
-      });
-    }
-  });
 
   // ==========================================
   // CIVIC INTEGRITY / CONFIDENTIAL VAULT APIS

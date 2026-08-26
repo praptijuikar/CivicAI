@@ -1,15 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Phone, KeyRound, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+import { apiLogin } from "../lib/api.ts";
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    phone: "",
+    otp: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,22 +21,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Bypassing backend fetch API for local demo mode to avoid JSON parse errors on Vercel
-      // Simulating network delay
-      await new Promise(resolve => setTimeout(resolve, 600));
+      const { user, token } = await apiLogin(formData.phone, formData.otp);
       
-      const mockUser = {
-        id: "usr-citizen-demo",
-        name: "Demo Citizen",
-        email: formData.email,
-        role: "citizen",
-        tenantId: "municipality-sf",
-        reputationScore: 100,
-        createdAt: new Date().toISOString(),
-      };
-      
-      localStorage.setItem("civicai-token", "demo-token-12345");
-      localStorage.setItem("civicai-user", JSON.stringify(mockUser));
+      localStorage.setItem("civicai-token", token);
+      localStorage.setItem("civicai-user", JSON.stringify(user));
       
       // Dispatch a storage event so App.tsx picks up the user immediately without a reload
       window.dispatchEvent(new Event("storage"));
@@ -74,30 +63,30 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Email</label>
+            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Phone Number</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 required
-                type="email"
-                placeholder="citizen@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                type="tel"
+                placeholder="+1 555-1234"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50 transition-all outline-none text-sm font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Password</label>
+            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">OTP / Passcode</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 required
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                type="text"
+                placeholder="123456"
+                value={formData.otp}
+                onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50 transition-all outline-none text-sm font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
@@ -117,17 +106,17 @@ export default function LoginPage() {
         <div className="mt-6 rounded-xl border border-[#00F2FE]/20 bg-[#00F2FE]/5 px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#00F2FE] mb-1.5">
-              Demo Credentials
+              Demo Quick Login
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
-              Email: <span className="text-slate-900 dark:text-slate-100 font-semibold">citizen@civic.ai</span> <br className="sm:hidden" />
-              <span className="hidden sm:inline">&nbsp;|&nbsp;</span> Password: <span className="text-slate-900 dark:text-slate-100 font-semibold">citizen123</span>
+              Phone: <span className="text-slate-900 dark:text-slate-100 font-semibold">+1 555-1234</span> <br className="sm:hidden" />
+              <span className="hidden sm:inline">&nbsp;|&nbsp;</span> OTP: <span className="text-slate-900 dark:text-slate-100 font-semibold">Any 6 digits</span>
             </p>
           </div>
           <button
             type="button"
             onClick={() => {
-              setFormData({ email: "citizen@civic.ai", password: "citizen123" });
+              setFormData({ phone: "+1 555-1234", otp: "123456" });
             }}
             className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
           >

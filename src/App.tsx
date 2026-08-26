@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import type { User, CivicIssue, Language, IssueStatus } from "./types.ts";
 import { setGlobalLanguage } from "./lib/i18n.ts";
-import { loadDemoReports, updateDemoReport } from "./lib/demoStorage.ts";
+import { fetchIssues as apiFetchIssues, updateIssueStatus } from "./lib/api.ts";
 import { ThemeProvider } from "./lib/ThemeContext.tsx";
 
 import Header from "./components/Header.tsx";
@@ -68,7 +68,12 @@ export default function App() {
   };
 
   const fetchIssues = useCallback(async () => {
-    setIssues(loadDemoReports());
+    try {
+      const data = await apiFetchIssues();
+      setIssues(data.issues || []);
+    } catch (e) {
+      console.error("Failed to fetch issues", e);
+    }
   }, []);
 
   useEffect(() => {
@@ -79,7 +84,7 @@ export default function App() {
 
   const handleIssueUpdated = (updated: CivicIssue) => {
     setSelectedIssue(updated);
-    setIssues((prev) => updateDemoReport(updated).length ? prev.map((i) => (i.id === updated.id ? updated : i)) : prev);
+    setIssues((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
   };
 
   const handleReportCreated = (report: CivicIssue) => {
@@ -93,18 +98,16 @@ export default function App() {
     assignedDepartment?: string,
     slaHours?: number
   ) => {
-    const existing = loadDemoReports().find((issue) => issue.id === issueId);
-    if (!existing) return;
-    const updated: CivicIssue = {
-      ...existing,
-      status,
-      assignedDepartment: assignedDepartment || existing.assignedDepartment,
-      slaHours: slaHours || existing.slaHours,
-      resolutionNotes: status === "resolved" ? comment || existing.resolutionNotes : existing.resolutionNotes,
-      updatedAt: new Date().toISOString(),
-    };
-    updateDemoReport(updated);
-    setIssues((previous) => previous.map((issue) => issue.id === issueId ? updated : issue));
+    try {
+      // For now, the API only takes status and notes. 
+      // If we want to assign department and SLA we might need a separate endpoint or update the status endpoint.
+      // We updated the status endpoint in server.ts to handle 'status' and 'notes'.
+      const data = await updateIssueStatus(issueId, status, comment);
+      const updated = data.issue;
+      setIssues((previous) => previous.map((issue) => issue.id === issueId ? updated : issue));
+    } catch (e) {
+      console.error("Failed to update status", e);
+    }
   };
 
   useEffect(() => {
