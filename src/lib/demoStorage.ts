@@ -29,7 +29,7 @@ const MOCK_ISSUES: CivicIssue[] = [
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
-    images: ["https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400"],
+    initialImageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400",
     upvotesCount: 24,
     aiUrgencyScore: 8.5
   },
@@ -39,7 +39,7 @@ const MOCK_ISSUES: CivicIssue[] = [
     description: "The streetlights on the north side of the park have been out for 3 days, making it unsafe at night.",
     category: "Utilities",
     subcategory: "Lighting",
-    status: "pending",
+    status: "submitted",
     severity: "Medium",
     latitude: 37.7750,
     longitude: -122.4180,
@@ -48,7 +48,7 @@ const MOCK_ISSUES: CivicIssue[] = [
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    images: [],
+    initialImageUrl: undefined,
     upvotesCount: 12,
     aiUrgencyScore: 5.2
   },
@@ -67,7 +67,7 @@ const MOCK_ISSUES: CivicIssue[] = [
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-    images: [],
+    initialImageUrl: undefined,
     upvotesCount: 8,
     aiUrgencyScore: 2.1
   }
