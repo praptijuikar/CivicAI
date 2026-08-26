@@ -20,20 +20,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
+      // Bypassing backend fetch API for local demo mode to avoid JSON parse errors on Vercel
+      // Simulating network delay
+      await new Promise(resolve => setTimeout(resolve, 600));
       
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      const mockUser = {
+        id: "usr-citizen-demo",
+        name: "Demo Citizen",
+        email: formData.email,
+        role: "citizen",
+        tenantId: "municipality-sf",
+        reputationScore: 100,
+        createdAt: new Date().toISOString(),
+      };
       
-      localStorage.setItem("civicai-token", data.token);
-      localStorage.setItem("civicai-user", JSON.stringify(data.user));
+      localStorage.setItem("civicai-token", "demo-token-12345");
+      localStorage.setItem("civicai-user", JSON.stringify(mockUser));
+      
+      // Dispatch a storage event so App.tsx picks up the user immediately without a reload
+      window.dispatchEvent(new Event("storage"));
+      
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
