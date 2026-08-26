@@ -24,23 +24,41 @@ export default function LoginPage() {
       let user;
       let token;
       
-      try {
-        const res = await apiLogin(formData.phone, formData.otp);
-        user = res.user;
-        token = res.token;
-      } catch (err: any) {
-        console.warn("Backend login failed, using mock fallback:", err);
-        // Graceful Fallback / Mock Success
-        user = {
-          id: "usr-citizen-01",
-          name: "CivicAI Citizen (Mock)",
-          email: "citizen@civicai.local",
-          phone: formData.phone || "+15551234",
-          role: "citizen",
-          tenantId: "municipality-sf",
-          reputationScore: 100,
-          createdAt: new Date().toISOString(),
-        };
+      const isVercel = window.location.hostname.includes("vercel.app");
+      let useMock = isVercel;
+      
+      if (!useMock) {
+        try {
+          const res = await apiLogin(formData.phone, formData.otp);
+          user = res.user;
+          token = res.token;
+        } catch (err: any) {
+          console.warn("Backend login failed, using mock fallback:", err);
+          useMock = true;
+        }
+      }
+      
+      if (useMock) {
+        const existingUsersStr = localStorage.getItem("civicai-users");
+        const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
+        const foundUser = users.find((u: any) => u.phone === formData.phone);
+        
+        if (foundUser) {
+          // Remove password before assigning to user object if we want it clean, but for mock it's fine
+          user = foundUser;
+        } else {
+          // Graceful Fallback / Mock Success for unregistered phone numbers
+          user = {
+            id: "usr-citizen-01",
+            name: "CivicAI Citizen (Mock)",
+            email: "citizen@civicai.local",
+            phone: formData.phone || "+15551234",
+            role: "citizen",
+            tenantId: "municipality-sf",
+            reputationScore: 100,
+            createdAt: new Date().toISOString(),
+          };
+        }
         token = "mock-jwt-token-12345";
       }
       
