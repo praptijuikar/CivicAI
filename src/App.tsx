@@ -119,9 +119,13 @@ export default function App() {
   // Derived state for Header
   const activePortalTab = location.pathname.includes("/admin/dashboard")
     ? "authority"
-    : location.pathname.includes("/dashboard")
-      ? "citizen"
-      : "citizen";
+    : location.pathname.includes("/integrity")
+      ? "integrity"
+      : location.pathname.includes("/field-officer")
+        ? "officer"
+        : location.pathname.includes("/analytics")
+          ? "analytics"
+          : "citizen";
 
   return (
     <div key={language} className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-50 flex flex-col relative transition-colors duration-300">
@@ -132,6 +136,9 @@ export default function App() {
             activePortalTab={activePortalTab as any}
             onPortalTabChange={(tab) => {
                if (tab === "authority") navigate("/admin/dashboard");
+               else if (tab === "integrity") navigate("/integrity");
+               else if (tab === "officer") navigate("/field-officer");
+               else if (tab === "analytics") navigate("/analytics");
                else navigate("/dashboard");
             }}
             language={language}
@@ -176,6 +183,25 @@ export default function App() {
                 onRefreshIssues={fetchIssues}
               />
             </AdminErrorBoundary>
+          } />
+          <Route path="/integrity" element={
+            <IntegrityPortal currentUser={currentUser || DEFAULT_MOCK_USER} language={language} />
+          } />
+          <Route path="/field-officer" element={
+            <FieldOfficerPortal 
+              currentUser={currentUser || DEFAULT_MOCK_USER} 
+              issues={issues}
+              onSelectIssue={setSelectedIssue}
+              onRefreshIssues={fetchIssues}
+              language={language}
+            />
+          } />
+          <Route path="/analytics" element={
+            <AnalyticsDashboard 
+              issues={issues}
+              onSelectIssue={setSelectedIssue}
+              language={language}
+            />
           } />
         </Routes>
       </main>

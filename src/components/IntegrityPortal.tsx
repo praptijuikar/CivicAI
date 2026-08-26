@@ -53,8 +53,8 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
     setIsLoading(true);
     try {
       const res = await api.getIntegrityReports();
-      setReports(res.reports || []);
-      if (res.reports?.length && !selectedCase) {
+      setReports(res?.reports || []);
+      if (res?.reports?.length && !selectedCase) {
         setSelectedCase(res.reports[0]);
       }
     } catch (err) {

@@ -77,7 +77,7 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
   // Handle successful responses
   const text = await response.text();
   try {
-    return text ? JSON.parse(text) : {};
+    return (text ? JSON.parse(text) : {}) as unknown as T;
   } catch (err) {
     throw new ApiError("Received invalid JSON from server.", response.status, { rawText: text });
   }
@@ -291,7 +291,7 @@ export const api = {
 // Standalone exported functions for updated components
 // ==========================================
 
-const API_BASE = "/api/v1";
+const API_BASE = `${BASE_URL}/api/v1`;
 
 function getAuthHeader() {
   const token = localStorage.getItem("civicai-token");
