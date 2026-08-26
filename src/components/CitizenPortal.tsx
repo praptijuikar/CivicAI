@@ -730,7 +730,6 @@ export default function CitizenPortal({
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     accept="image/*"
-                    capture="environment"
                     className="hidden"
                   />
                   <div className="w-14 h-14 rounded-2xl bg-saffron/10 border border-saffron/30 flex items-center justify-center text-ashoka-navy dark:text-ashoka-navy mx-auto group-hover:scale-110 transition">

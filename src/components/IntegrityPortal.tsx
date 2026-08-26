@@ -195,7 +195,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as IntegrityCategory)}
-                    className="w-full bg-background border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-red-500"
+                    className="w-full bg-background border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-red-500 [&>option]:bg-surface [&>option]:text-foreground"
                   >
                     <option value="Suspected Bribery">Suspected Bribery / Kickbacks</option>
                     <option value="Unauthorized Construction">Unauthorized Construction / Permit Bypass</option>
@@ -247,7 +247,13 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                 {/* Evidence Upload Zone */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-foreground/80">Digital Evidence Vault Ingestion</label>
-                  <div className="border-2 border-dashed border-border-subtle hover:border-red-500 rounded-xl p-5 bg-background/60 text-center space-y-2 cursor-pointer transition">
+                  <label className="border-2 border-dashed border-border-subtle hover:border-red-500 rounded-xl p-5 bg-background/60 text-center space-y-2 cursor-pointer transition block relative">
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                    />
                     <Upload className="w-6 h-6 text-red-400 mx-auto" />
                     <p className="text-xs font-semibold text-gray-200">
                       Upload Photos, Scanned Documents, Audio recordings, or Invoices
@@ -255,7 +261,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                     <p className="text-[10px] text-foreground/60 font-mono">
                       Calculates client-side SHA-256 hash prior to upload
                     </p>
-                  </div>
+                  </label>
                 </div>
 
                 {/* Description */}
