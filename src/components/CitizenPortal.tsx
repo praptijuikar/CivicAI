@@ -279,12 +279,23 @@ export default function CitizenPortal({
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const analysis: AIAnalysisResult = {
-        hasIssue: true,
-        summary: "Pothole detected in the road surface.",
+        isValidScene: true,
+        hasVisibleIssue: true,
+        primaryIssueDetected: "Pothole",
+        isCategoryMismatch: false,
+        isAuthentic: true,
+        authenticityReasoning: "EXIF data matches GPS location and capture time.",
         predictedCategory: "Infrastructure",
         subcategory: "Road Repair",
+        confidence: 0.95,
         severity: "High",
-        confidence: 0.95
+        calculatedPriorityScore: 90,
+        safetyRisks: ["Vehicle damage", "Trip hazard"],
+        recommendedDepartment: "Public Works",
+        estimatedResolutionHours: 24,
+        suggestedEquipment: ["Asphalt", "Steamroller"],
+        actionChecklist: ["Secure area", "Fill pothole", "Level surface"],
+        summary: "Pothole detected in the road surface."
       };
 
       setAiAnalysis(analysis);
