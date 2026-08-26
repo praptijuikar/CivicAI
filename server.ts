@@ -235,7 +235,7 @@ async function startServer() {
   const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000;
   const maxRequests = Number(process.env.RATE_LIMIT_MAX) || 100;
   const issueMaxRequests = Number(process.env.ISSUE_RATE_LIMIT_MAX) || 20;
-  const bodyLimit = process.env.BODY_LIMIT || "10mb";
+  const bodyLimit = process.env.BODY_LIMIT || "50mb";
   const asyncComplaints = process.env.ASYNC_COMPLAINTS === "true";
   const complaintQueue = new ComplaintQueue<ComplaintPayload>({
     maxSize: Number(process.env.COMPLAINT_QUEUE_MAX) || 50_000,

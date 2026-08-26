@@ -317,14 +317,25 @@ export async function apiLogin(phone: string, otp: string) {
   }
 }
 
+async function safeParseResponse(response: Response) {
+  let data;
+  const text = await response.text();
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    data = { error: "Invalid JSON response from server. The server might have crashed or returned an HTML error page." };
+  }
+  if (!response.ok) {
+    throw new Error(data.message || data.error || `Request failed with status ${response.status}`);
+  }
+  return data;
+}
+
 export async function fetchIssues() {
   const response = await fetch(`${API_BASE}/issues`, {
     headers: getAuthHeader(),
   });
-  if (!response.ok) {
-    throw new Error("Failed to fetch issues");
-  }
-  return response.json();
+  return safeParseResponse(response);
 }
 
 export async function submitCivicIssue(payload: any) {
@@ -336,11 +347,7 @@ export async function submitCivicIssue(payload: any) {
     },
     body: JSON.stringify(payload),
   });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || "Failed to submit issue");
-  }
-  return response.json();
+  return safeParseResponse(response);
 }
 
 export async function updateIssueStatus(id: string, status: string, notes?: string) {
@@ -352,11 +359,7 @@ export async function updateIssueStatus(id: string, status: string, notes?: stri
     },
     body: JSON.stringify({ status, notes }),
   });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || "Failed to update status");
-  }
-  return response.json();
+  return safeParseResponse(response);
 }
 
 export async function upvoteIssue(id: string) {
@@ -364,11 +367,7 @@ export async function upvoteIssue(id: string) {
     method: "POST",
     headers: getAuthHeader(),
   });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || "Failed to upvote issue");
-  }
-  return response.json();
+  return safeParseResponse(response);
 }
 
 export async function analyzeImage(imageBase64: string, mimeType: string = "image/jpeg") {
@@ -377,9 +376,5 @@ export async function analyzeImage(imageBase64: string, mimeType: string = "imag
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageBase64, mimeType }),
   });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.message || data.error || "Failed to analyze image");
-  }
-  return response.json();
+  return safeParseResponse(response);
 }
