@@ -74,7 +74,13 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
     );
   }
 
-  return response.json();
+  // Handle successful responses
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    throw new ApiError("Received invalid JSON from server.", response.status, { rawText: text });
+  }
 }
 
 /**
