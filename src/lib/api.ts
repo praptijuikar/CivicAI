@@ -61,7 +61,8 @@ async function httpClient<T>(path: string, options: RequestInit = {}): Promise<T
   if (!response.ok) {
     let errorData: any = {};
     try {
-      errorData = await response.json();
+      const errorText = await response.text();
+      errorData = errorText ? JSON.parse(errorText) : { message: response.statusText || "An unexpected error occurred." };
     } catch {
       // Fallback if response body is empty or non-JSON (e.g. HTML error page)
       errorData = { message: response.statusText || "An unexpected error occurred." };
