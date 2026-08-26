@@ -28,44 +28,30 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      // Fetch existing users from localStorage or init empty array
-      const existingUsersStr = localStorage.getItem("civicai-users");
-      const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
+      const res = await fetch("/api/v1/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
       
-      // Check if email or phone already exists
-      const userExists = users.some((u: any) => u.email === formData.email || (formData.phone && u.phone === formData.phone));
-      if (userExists) {
-        throw new Error("User with this email or phone already exists.");
+      const text = await res.text();
+      let data: any = {};
+      
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = { error: "Invalid JSON response from server." };
+        }
+      } else if (!res.ok) {
+        data = { error: "Registration failed with an empty response from the server." };
       }
       
-      // Create new user object
-      const newUser = {
-        id: `usr-${Date.now()}`,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        password: formData.password, // Storing in plain text purely for this client-side mock
-        role: "citizen",
-        tenantId: "municipality-sf",
-        reputationScore: 100,
-        createdAt: new Date().toISOString(),
-      };
+      if (!res.ok) throw new Error(data.error || "Registration failed");
       
-      // Save updated users list
-      users.push(newUser);
-      localStorage.setItem("civicai-users", JSON.stringify(users));
-      
-      // Mock login token
-      const mockToken = `mock-token-${Date.now()}`;
-      localStorage.setItem("civicai-token", mockToken);
-      
-      // Exclude password from the stored logged-in user object
-      const { password, ...userWithoutPassword } = newUser;
-      localStorage.setItem("civicai-user", JSON.stringify(userWithoutPassword));
-      
-      // Dispatch a storage event so App.tsx picks up the user immediately without a reload
-      window.dispatchEvent(new Event("storage"));
-      
+      // Store token (mocking token storage for now)
+      localStorage.setItem("civicai-token", data.token);
+      localStorage.setItem("civicai-user", JSON.stringify(data.user));
       navigate("/dashboard");
     } catch (err: any) {
       setError(err.message);

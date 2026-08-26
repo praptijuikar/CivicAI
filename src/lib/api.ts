@@ -306,12 +306,17 @@ export async function apiLogin(phone: string, otp: string) {
       body: JSON.stringify({ phone, otp }),
     });
     
-    let data;
+    let data: any = {};
     const text = await response.text();
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (e) {
-      data = { error: "Invalid JSON response from server" };
+    
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        data = { error: "Invalid JSON response from server." };
+      }
+    } else if (!response.ok) {
+      data = { error: "Login failed with an empty response from the server." };
     }
 
     if (!response.ok) {
