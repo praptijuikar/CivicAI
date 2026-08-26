@@ -195,7 +195,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as IntegrityCategory)}
-                    className="w-full bg-background border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-red-500 [&>option]:bg-surface [&>option]:text-foreground"
+                    className="w-full bg-background border border-border-subtle rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-red-500 [&>option]:bg-white [&>option]:text-gray-900"
                   >
                     <option value="Suspected Bribery">Suspected Bribery / Kickbacks</option>
                     <option value="Unauthorized Construction">Unauthorized Construction / Permit Bypass</option>
@@ -545,7 +545,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                         <select
                           value={newStatus}
                           onChange={(e) => setNewStatus(e.target.value)}
-                          className="w-full bg-surface border border-border-subtle hover:border-foreground/20 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-purple-500"
+                          className="w-full bg-surface border border-border-subtle hover:border-foreground/20 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-purple-500 [&>option]:bg-white [&>option]:text-gray-900"
                         >
                           <option value="under_review">Under Initial Review</option>
                           <option value="investigation_active">Active Investigation & Subpoena</option>
