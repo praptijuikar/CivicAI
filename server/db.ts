@@ -976,7 +976,7 @@ export function syncWithFirebase() {
     const data = snapshot.val();
     if (data) {
       // Need to modify exported constants
-      const userList = Object.values(data);
+      const userList = Object.values(data) as User[];
       userList.forEach(u => {
         const idx = USERS.findIndex(existing => existing.id === u.id);
         if (idx >= 0) USERS[idx] = u;
@@ -988,7 +988,7 @@ export function syncWithFirebase() {
   firebaseDb.ref('issues').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      const issueList = Object.values(data);
+      const issueList = Object.values(data) as any[];
       // We overwrite entirely or selectively merge. For simplicity, we just clear and push.
       ISSUES.length = 0;
       ISSUES.push(...issueList);
@@ -998,7 +998,7 @@ export function syncWithFirebase() {
   firebaseDb.ref('integrityReports').on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      const reportList = Object.values(data);
+      const reportList = Object.values(data) as IntegrityReport[];
       INTEGRITY_REPORTS.length = 0;
       INTEGRITY_REPORTS.push(...reportList);
     }

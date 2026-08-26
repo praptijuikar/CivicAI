@@ -29,8 +29,10 @@ export type CivicCategory =
 
 export type IssueStatus =
   | 'submitted'
+  | 'assigned'
   | 'in_progress'
   | 'resolved'
+  | 'verified'
   | 'escalated';
 
 export type Severity = 'Critical' | 'High' | 'Medium' | 'Low';

@@ -25,13 +25,18 @@ const MOCK_ISSUES: CivicIssue[] = [
     latitude: 37.7749,
     longitude: -122.4194,
     locationAddress: "123 Main St, Downtown",
+    address: "123 Main St, Downtown",
     userId: "usr-citizen-demo",
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
     initialImageUrl: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&q=80&w=400",
     upvotesCount: 24,
-    aiUrgencyScore: 8.5
+    upvotes: 24,
+    aiUrgencyScore: 8.5,
+    priorityScore: 85,
+    reportCount: 1,
+    history: []
   },
   {
     id: "CIV-2026-1002",
@@ -44,13 +49,18 @@ const MOCK_ISSUES: CivicIssue[] = [
     latitude: 37.7750,
     longitude: -122.4180,
     locationAddress: "North Park Avenue",
+    address: "North Park Avenue",
     userId: "usr-citizen-demo",
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
     initialImageUrl: undefined,
     upvotesCount: 12,
-    aiUrgencyScore: 5.2
+    upvotes: 12,
+    aiUrgencyScore: 5.2,
+    priorityScore: 52,
+    reportCount: 1,
+    history: []
   },
   {
     id: "CIV-2026-1003",
@@ -63,13 +73,18 @@ const MOCK_ISSUES: CivicIssue[] = [
     latitude: 37.7730,
     longitude: -122.4200,
     locationAddress: "Sunset District Block 4",
+    address: "Sunset District Block 4",
     userId: "usr-citizen-demo",
     reporterName: "Demo Citizen",
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     initialImageUrl: undefined,
     upvotesCount: 8,
-    aiUrgencyScore: 2.1
+    upvotes: 8,
+    aiUrgencyScore: 2.1,
+    priorityScore: 21,
+    reportCount: 1,
+    history: []
   }
 ];
 

@@ -1,4 +1,5 @@
-import admin from "firebase-admin";
+import { initializeApp, cert, getApp } from "firebase-admin/app";
+import { getDatabase } from "firebase-admin/database";
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -9,8 +10,8 @@ let isFirebaseInitialized = false;
 
 if (projectId && clientEmail && privateKey && databaseURL && !projectId.includes("your-firebase")) {
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
+    initializeApp({
+      credential: cert({
         projectId,
         clientEmail,
         privateKey,
@@ -26,5 +27,5 @@ if (projectId && clientEmail && privateKey && databaseURL && !projectId.includes
   console.warn("[Firebase] Credentials missing or placeholder. Running in Local Mock Mode.");
 }
 
-export const firebaseApp = isFirebaseInitialized ? admin.app() : null;
-export const firebaseDb = isFirebaseInitialized ? admin.database() : null;
+export const firebaseApp = isFirebaseInitialized ? getApp() : null;
+export const firebaseDb = isFirebaseInitialized ? getDatabase() : null;
