@@ -337,7 +337,7 @@ export default function TrafficReportForm({
           onChange={(e) => setEstablishmentName(e.target.value)}
           placeholder={
             category === "Food & Health Safety"
-              ? "e.g. Dragon Palace Restaurant, Hawker Stall #14…"
+              ? "e.g. City Hospital Ward 4, Dragon Palace Restaurant, Primary Health Center…"
               : category === "Traffic Jam"
               ? "e.g. Market St & 5th Ave Intersection…"
               : "e.g. City Hall Parking Zone B…"

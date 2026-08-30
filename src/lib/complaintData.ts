@@ -9,9 +9,12 @@ export type ComplaintCategory =
 export type FoodHealthSubType =
   | "Unhygienic Conditions"
   | "Food Poisoning / Expired Food"
-  | "Pest Contamination"
-  | "Unlicensed Food Vendor"
-  | "Illegal Waste Disposal / Sewage";
+  | "Hospital Negligence / Malpractice"
+  | "Lack of Medical Staff / Doctor Absence"
+  | "Overcharging / Billing Fraud in Hospital"
+  | "Unclean Hospital Facility / Ward Sanitation"
+  | "Unavailability of Essential Medicines"
+  | "Illegal Waste / Sewage Dumping";
 
 export type TrafficSubType =
   | "Gridlock"
@@ -65,12 +68,15 @@ export const COMPLAINT_CATEGORY_CONFIG: Record<
     subTypes: [
       "Unhygienic Conditions",
       "Food Poisoning / Expired Food",
-      "Pest Contamination",
-      "Unlicensed Food Vendor",
-      "Illegal Waste Disposal / Sewage",
+      "Hospital Negligence / Malpractice",
+      "Lack of Medical Staff / Doctor Absence",
+      "Overcharging / Billing Fraud in Hospital",
+      "Unclean Hospital Facility / Ward Sanitation",
+      "Unavailability of Essential Medicines",
+      "Illegal Waste / Sewage Dumping",
     ],
     descriptionPlaceholder:
-      "E.g. Restaurant name, nature of hazard, number of people affected…",
+      "E.g. Restaurant or hospital name, nature of hazard, medical details, number of people affected…",
     refPrefix: "FHS",
   },
   "Traffic Jam": {

@@ -545,82 +545,48 @@ export default function CitizenPortal({
             }}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="space-y-6"
           >
-            {/* Bento Card 1: Report Issue */}
-            <TiltBentoCard
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
-              }}
-              onClick={() => {
-                setActiveTab("report");
-                setReportStep("media");
-              }}
-              className="md:col-span-2 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px]"
-              glowColor="hover:border-[#00F2FE]/40 hover:shadow-[#00F2FE]/5"
-            >
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#00F2FE]/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-              <div style={{ transform: "translateZ(10px)" }}>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/20 flex items-center justify-center text-[#00F2FE] group-hover:scale-105 transition">
-                    <Camera className="w-5 h-5" />
+            {/* Top Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Bento Card 1: Report Issue */}
+              <TiltBentoCard
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                }}
+                onClick={() => {
+                  setActiveTab("report");
+                  setReportStep("media");
+                }}
+                className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px]"
+                glowColor="hover:border-[#00F2FE]/40 hover:shadow-[#00F2FE]/5"
+              >
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#00F2FE]/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                <div style={{ transform: "translateZ(10px)" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/20 flex items-center justify-center text-[#00F2FE] group-hover:scale-105 transition">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/20">
+                      AI Triage Active
+                    </span>
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/20">
-                    AI Triage Active
-                  </span>
+                  <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
+                    Departmental Service Hub
+                    <ArrowRight className="w-4 h-4 text-[#00F2FE] group-hover:translate-x-1 transition" />
+                  </h3>
+                  <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
+                    Take a photo of road potholes, water leaks, broken lampposts, or sanitation hazards. Gemini AI automatically classifies severity and alerts correct municipal routing.
+                  </p>
                 </div>
-                <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                  Departmental Service Hub
-                  <ArrowRight className="w-4 h-4 text-[#00F2FE] group-hover:translate-x-1 transition" />
-                </h3>
-                <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
-                  Take a photo of road potholes, water leaks, broken lampposts, or sanitation hazards. Gemini AI automatically classifies severity and alerts correct municipal routing.
-                </p>
-              </div>
-              <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-[#00F2FE] font-bold">
-                <span>Instant GPS Tagging • Duplicate Prevention</span>
-                <span>Start Report &rarr;</span>
-              </div>
-            </TiltBentoCard>
-
-            {/* Bento Card 2: Integrity Vault */}
-            <TiltBentoCard
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
-              }}
-              onClick={onOpenIntegrity}
-              className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-[#6366F1]/20"
-              glowColor="hover:border-[#6366F1]/40 hover:shadow-[#6366F1]/5"
-            >
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#6366F1]/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-              <div style={{ transform: "translateZ(10px)" }}>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-[#6366F1]/10 border border-[#6366F1]/20 flex items-center justify-center text-[#6366F1] group-hover:scale-105 transition">
-                    <Shield className="w-5 h-5" />
-                  </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                    Secure Ledger
-                  </span>
+                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-[#00F2FE] font-bold">
+                  <span>Instant GPS Tagging • Duplicate Prevention</span>
+                  <span>Start Report &rarr;</span>
                 </div>
-                <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                  Integrity & Legal Shield
-                  <ArrowRight className="w-4 h-4 text-[#6366F1] group-hover:translate-x-1 transition" />
-                </h3>
-                <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
-                  Submit metadata-scrubbed whistleblowing disclosures on municipal corruption with SHA-256 ledger security.
-                </p>
-              </div>
-              <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-[#6366F1] font-bold">
-                <span>Zero-Knowledge • Vetted Audit</span>
-                <span>Open Vault &rarr;</span>
-              </div>
-            </TiltBentoCard>
+              </TiltBentoCard>
 
-            {/* Secondary Services Row */}
-            <div className="md:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Bento Card 2b: Traffic / Parking Complaint */}
+              {/* Bento Card 2: Traffic, Parking & Health Hub */}
               <TiltBentoCard
                 variants={{
                   hidden: { opacity: 0, y: 20 },
@@ -630,7 +596,7 @@ export default function CitizenPortal({
                   setComplaintFormCategory("Traffic Jam");
                   setIsTrafficModalOpen(true);
                 }}
-                className="glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-amber-500/20"
+                className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-amber-500/20"
                 glowColor="hover:border-amber-500/40 hover:shadow-amber-500/5"
               >
                 <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
@@ -640,89 +606,89 @@ export default function CitizenPortal({
                       <AlertTriangle className="w-5 h-5" />
                     </div>
                     <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      Traffic Unit
+                      CIVIC & HEALTH UNIT
                     </span>
                   </div>
                   <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                    Traffic &amp; Parking
+                    Traffic, Parking & Health Hub
                     <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition" />
                   </h3>
                   <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
-                    Report traffic jams, illegally parked vehicles, or road hazards. Auto-extract GPS from your photo.
+                    Report traffic jams, illegal parking, food safety violations, hospital issues, or public health hazards. Extract GPS directly from photo evidence.
                   </p>
                 </div>
                 <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-amber-400 font-bold">
-                  <span>EXIF GPS • Map Pin • Photo Evidence</span>
+                  <span>EXIF GPS • Map Tagging • Food & Traffic</span>
                   <span>File Complaint &rarr;</span>
                 </div>
               </TiltBentoCard>
 
-              {/* Bento Card 2c: Health & Govt Unit Complaint */}
+              {/* Bento Card 3: Integrity Vault */}
               <TiltBentoCard
                 variants={{
                   hidden: { opacity: 0, y: 20 },
                   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
                 }}
-                onClick={() => {
-                  setComplaintFormCategory("Food & Health Safety");
-                  setIsTrafficModalOpen(true);
-                }}
-                className="glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-emerald-500/20"
-                glowColor="hover:border-emerald-500/40 hover:shadow-emerald-500/5"
+                onClick={onOpenIntegrity}
+                className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-[#6366F1]/20"
+                glowColor="hover:border-[#6366F1]/40 hover:shadow-[#6366F1]/5"
               >
-                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-emerald-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[#6366F1]/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
                 <div style={{ transform: "translateZ(10px)" }}>
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition">
-                      <PlusCircle className="w-5 h-5" />
+                    <div className="w-12 h-12 rounded-xl bg-[#6366F1]/10 border border-[#6366F1]/20 flex items-center justify-center text-[#6366F1] group-hover:scale-105 transition">
+                      <Shield className="w-5 h-5" />
                     </div>
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      HEALTH & GOVT UNIT
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      Secure Ledger
                     </span>
                   </div>
                   <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                    Health & Civic Services
-                    <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition" />
+                    Integrity & Legal Shield
+                    <ArrowRight className="w-4 h-4 text-[#6366F1] group-hover:translate-x-1 transition" />
                   </h3>
                   <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
-                    Report hospital negligence, unhygienic facilities, lack of medical staff, or misconduct/delays at government offices.
+                    Submit metadata-scrubbed whistleblowing disclosures on municipal corruption with SHA-256 ledger security.
                   </p>
                 </div>
-                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-emerald-400 font-bold">
-                  <span>Encrypted Vault • Geo-Tagged • Anonymous</span>
-                  <span>File Complaint &rarr;</span>
+                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-[#6366F1] font-bold">
+                  <span>Zero-Knowledge • Vetted Audit</span>
+                  <span>Open Vault &rarr;</span>
                 </div>
               </TiltBentoCard>
             </div>
 
-            {/* Bento Card 3: Interactive Map */}
-            <motion.div
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 15 } }
-              }}
-              className="md:col-span-2 space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xs font-bold text-foreground/80 uppercase tracking-wider">{t('Neighborhood Live Issue Map')}</h3>
-                  <p className="text-[10px] text-foreground/60">Click marker to view status or +1 upvote</p>
+            {/* Bottom Section */}
+            <div className="w-full space-y-6">
+              {/* Bento Card: Interactive Map */}
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100, damping: 15 } }
+                }}
+                className="w-full space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-foreground/80 uppercase tracking-wider">{t('Neighborhood Live Issue Map')}</h3>
+                    <p className="text-[10px] text-foreground/60">Click marker to view status or +1 upvote</p>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#00F2FE] bg-[#00F2FE]/10 px-2.5 py-1 rounded-lg border border-[#00F2FE]/20">
+                    {issues.length} Civic · {complaintRecords.length} Safety Reports
+                  </span>
                 </div>
-                <span className="text-[10px] font-mono text-[#00F2FE] bg-[#00F2FE]/10 px-2.5 py-1 rounded-lg border border-[#00F2FE]/20">
-                  {issues.length} Civic · {complaintRecords.length} Safety Reports
-                </span>
-              </div>
-              <div className="h-80 rounded-2xl overflow-hidden border border-border-subtle shadow-2xl relative">
-                <ComplaintMap
-                  civicIssues={issues}
-                  onSelectCivicIssue={onSelectIssue}
-                  complaintRecords={complaintRecords}
-                  center={[issueLatitude, issueLongitude]}
-                  showFilterBar={true}
-                  className="w-full h-full"
-                />
-              </div>
-            </motion.div>
+                <div className="h-[450px] rounded-2xl overflow-hidden border border-border-subtle shadow-2xl relative">
+                  <ComplaintMap
+                    civicIssues={issues}
+                    onSelectCivicIssue={onSelectIssue}
+                    complaintRecords={complaintRecords}
+                    center={[issueLatitude, issueLongitude]}
+                    showFilterBar={true}
+                    className="w-full h-full"
+                  />
+                </div>
+              </motion.div>
+            </div>
 
             {/* Bento Card 4: AI Triage Engine Node Stats */}
             <TiltBentoCard
@@ -730,7 +696,7 @@ export default function CitizenPortal({
                 hidden: { opacity: 0, y: 20 },
                 show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
               }}
-              className="md:col-span-1 glass-panel p-6 rounded-2xl flex flex-col justify-between"
+              className="glass-panel p-6 rounded-2xl flex flex-col justify-between max-w-sm mx-auto"
               glowColor="hover:border-[#00F2FE]/40 hover:shadow-[#00F2FE]/5"
             >
               <div style={{ transform: "translateZ(10px)" }} className="w-full">
@@ -983,6 +949,14 @@ export default function CitizenPortal({
                           setIssueAddress(preset.address);
                           setIssueLatitude(preset.lat);
                           setIssueLongitude(preset.lng);
+                          setAiVerification({
+                            valid: true,
+                            categoryPrediction: preset.category,
+                            confidenceScore: 99,
+                            generativeScore: 0.01,
+                            exifTags: { lat: preset.lat, lng: preset.lng }
+                          });
+                          setIsVerifyingImage(false);
                           handleImageSelected(preset.url, preset.description);
                         }}
                         className="p-2 rounded-xl bg-background border border-border-subtle hover:border-saffron/60 text-left transition group space-y-1"

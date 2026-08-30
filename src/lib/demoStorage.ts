@@ -123,7 +123,7 @@ export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   {
     id: "FHS-10003",
     category: "Food & Health Safety",
-    subType: "Unlicensed Food Vendor",
+    subType: "Unhygienic Conditions",
     establishmentName: "Street Cart – Corner of Oak & 3rd",
     description: "Unlicensed mobile cart selling raw seafood without refrigeration. No health permit displayed.",
     severity: "Medium",
@@ -137,7 +137,7 @@ export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   {
     id: "FHS-10004",
     category: "Food & Health Safety",
-    subType: "Pest Contamination",
+    subType: "Unhygienic Conditions",
     establishmentName: "Sunrise Bakery",
     description: "Rodent droppings found near bread display shelves. Pest sighting reported by two separate customers.",
     severity: "High",

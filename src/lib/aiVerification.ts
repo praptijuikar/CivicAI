@@ -11,6 +11,15 @@ export interface AIVerificationResult {
 
 export async function verifyCivicDefect(file: File): Promise<AIVerificationResult> {
   return new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      resolve({ valid: false, reason: "Image verification failed: Process timed out." });
+    }, 1500);
+
+    const resolveAndClear = (res: AIVerificationResult) => {
+      clearTimeout(timeoutId);
+      resolve(res);
+    };
+
     const url = URL.createObjectURL(file);
     const img = new Image();
     
@@ -21,7 +30,7 @@ export async function verifyCivicDefect(file: File): Promise<AIVerificationResul
       canvas.height = 32;
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        resolve({ valid: false, reason: "Image verification failed: Cannot read image data." });
+        resolveAndClear({ valid: false, reason: "Image verification failed: Cannot read image data." });
         return;
       }
       
@@ -63,7 +72,7 @@ export async function verifyCivicDefect(file: File): Promise<AIVerificationResul
       const meanBrightness = brightnessSum / numPixels;
       
       if (meanBrightness < 10 || (rVar < 10 && gVar < 10 && bVar < 10)) {
-        resolve({ valid: false, reason: "Image verification failed: Dark or blank image detected." });
+        resolveAndClear({ valid: false, reason: "Image verification failed: Dark or blank image detected." });
         return;
       }
 
@@ -88,7 +97,7 @@ export async function verifyCivicDefect(file: File): Promise<AIVerificationResul
         }
         
         if (generativeScore > 0.8) {
-          resolve({ valid: false, reason: "Image verification failed: AI-generated or manipulated image detected." });
+          resolveAndClear({ valid: false, reason: "Image verification failed: AI-generated or manipulated image detected." });
           return;
         }
         
@@ -98,7 +107,7 @@ export async function verifyCivicDefect(file: File): Promise<AIVerificationResul
         
         const confidenceScore = Math.floor(Math.random() * 10) + 85; // 85 to 94%
 
-        resolve({
+        resolveAndClear({
           valid: true,
           categoryPrediction: randomCategory,
           confidenceScore: confidenceScore,
@@ -113,7 +122,7 @@ export async function verifyCivicDefect(file: File): Promise<AIVerificationResul
       });
     };
     
-    img.onerror = () => resolve({ valid: false, reason: "Image verification failed: Invalid image format." });
+    img.onerror = () => resolveAndClear({ valid: false, reason: "Image verification failed: Invalid image format." });
     img.src = url;
   });
 }
