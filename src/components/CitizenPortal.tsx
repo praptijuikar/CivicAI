@@ -18,6 +18,19 @@ import {
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, useSpring } from "motion/react";
 import { submitCivicIssue, analyzeImage } from "../lib/api";
+import EXIF from "exif-js";
+
+function convertDMSToDD(degrees: number[], ref: string) {
+  if (!degrees || degrees.length < 3) return null;
+  const d = degrees[0];
+  const m = degrees[1];
+  const s = degrees[2];
+  let dd = d + m / 60 + s / 3600;
+  if (ref === "S" || ref === "W") {
+    dd = dd * -1;
+  }
+  return dd;
+}
 
 interface TiltBentoCardProps {
   children: React.ReactNode;
@@ -92,7 +105,10 @@ import type { Language, CivicIssue, AIAnalysisResult, User, Severity } from "../
 import InteractiveMap from "./InteractiveMap";
 import confetti from "canvas-confetti";
 import { validateImage } from "../lib/imageValidation";
-import { createDemoReportId, loadDemoReports, saveDemoReport, updateDemoReport } from "../lib/demoStorage";
+import { createDemoReportId, loadDemoReports, saveDemoReport, updateDemoReport, loadDemoComplaints, saveDemoComplaint } from "../lib/demoStorage";
+import TrafficReportForm from "./TrafficReportForm";
+import ComplaintMap from "./ComplaintMap";
+import type { ComplaintRecord } from "../lib/complaintData";
 
 interface CitizenPortalProps {
   currentUser: User;
@@ -117,6 +133,8 @@ export default function CitizenPortal({
 }: CitizenPortalProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"home" | "report" | "my-reports" | "feed">("home");
+  const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
+  const [complaintRecords, setComplaintRecords] = useState<ComplaintRecord[]>(() => loadDemoComplaints());
 
   // Reporting Form State
   const [reportStep, setReportStep] = useState<"media" | "ai_verify" | "duplicate_modal" | "success">("media");
@@ -323,7 +341,28 @@ export default function CitizenPortal({
           setImageValidationError(validation.reason || "Image failed validation. Please upload a clear photo.");
           return;
         }
-        setImageValidationError("");
+        
+        EXIF.getData(image as any, function (this: any) {
+          const lat = EXIF.getTag(this, "GPSLatitude");
+          const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+          const lng = EXIF.getTag(this, "GPSLongitude");
+          const lngRef = EXIF.getTag(this, "GPSLongitudeRef");
+
+          if (lat && latRef && lng && lngRef) {
+            const latitude = convertDMSToDD(lat, latRef);
+            const longitude = convertDMSToDD(lng, lngRef);
+            
+            if (latitude !== null && longitude !== null) {
+              setIssueLatitude(latitude);
+              setIssueLongitude(longitude);
+              setIssueAddress(`GPS Pin (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+              setImageValidationError("");
+            }
+          } else {
+            setImageValidationError("No location metadata found in this photo. Please upload an uncompressed original image taken with location enabled.");
+          }
+        });
+
         void handleImageSelected(reader.result as string, file.name);
       };
       image.onerror = () => {
@@ -562,6 +601,40 @@ export default function CitizenPortal({
               </div>
             </TiltBentoCard>
 
+            {/* Bento Card 2b: Traffic / Parking Complaint */}
+            <TiltBentoCard
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+              }}
+              onClick={() => setIsTrafficModalOpen(true)}
+              className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-amber-500/20"
+              glowColor="hover:border-amber-500/40 hover:shadow-amber-500/5"
+            >
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+              <div style={{ transform: "translateZ(10px)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    Traffic Unit
+                  </span>
+                </div>
+                <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
+                  Traffic &amp; Parking
+                  <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition" />
+                </h3>
+                <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
+                  Report traffic jams, illegally parked vehicles, or road hazards. Auto-extract GPS from your photo.
+                </p>
+              </div>
+              <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-amber-400 font-bold">
+                <span>EXIF GPS • Map Pin • Photo Evidence</span>
+                <span>File Complaint &rarr;</span>
+              </div>
+            </TiltBentoCard>
+
             {/* Bento Card 3: Interactive Map */}
             <motion.div
               variants={{
@@ -576,11 +649,17 @@ export default function CitizenPortal({
                   <p className="text-[10px] text-foreground/60">Click marker to view status or +1 upvote</p>
                 </div>
                 <span className="text-[10px] font-mono text-[#00F2FE] bg-[#00F2FE]/10 px-2.5 py-1 rounded-lg border border-[#00F2FE]/20">
-                  {issues.length} Active Public Issues
+                  {issues.length} Civic · {complaintRecords.length} Safety Reports
                 </span>
               </div>
               <div className="h-80 rounded-2xl overflow-hidden border border-border-subtle shadow-2xl relative">
-                <InteractiveMap issues={issues} onSelectIssue={onSelectIssue} />
+                <ComplaintMap
+                  civicIssues={issues}
+                  onSelectCivicIssue={onSelectIssue}
+                  complaintRecords={complaintRecords}
+                  showFilterBar={true}
+                  className="w-full h-full"
+                />
               </div>
             </motion.div>
 
@@ -627,6 +706,55 @@ export default function CitizenPortal({
                 </button>
               </div>
             </TiltBentoCard>
+
+            {/* Traffic Report Modal Overlay */}
+            {isTrafficModalOpen && (
+              <motion.div
+                key="traffic-modal-overlay"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                onClick={(e) => { if (e.target === e.currentTarget) setIsTrafficModalOpen(false); }}
+              >
+                <motion.div
+                  initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.92, opacity: 0, y: 20 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="w-full max-w-lg bg-surface border border-border-subtle rounded-2xl shadow-2xl overflow-hidden"
+                >
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-amber-500/20 border border-emerald-500/20 flex items-center justify-center">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-sm font-black text-foreground">File a Complaint</h2>
+                        <p className="text-[10px] text-foreground/50">Food &amp; Health · Traffic · Parking</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsTrafficModalOpen(false)}
+                      className="w-8 h-8 rounded-lg border border-border-subtle flex items-center justify-center text-foreground/40 hover:text-foreground hover:border-foreground/20 transition"
+                    >
+                      <ChevronRight className="w-4 h-4 rotate-180" />
+                    </button>
+                  </div>
+                  {/* Modal Body */}
+                  <div className="overflow-y-auto max-h-[80vh] px-6 py-5">
+                    <TrafficReportForm
+                      onClose={() => setIsTrafficModalOpen(false)}
+                      onComplaintSubmitted={(record) => {
+                        const updated = saveDemoComplaint(record);
+                        setComplaintRecords(updated);
+                      }}
+                    />
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
 
             {/* Bento Card 5: High Urgency Neighborhood Alerts Feed */}
             <motion.div

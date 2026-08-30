@@ -1,16 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Phone, KeyRound, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
-import { apiLogin } from "../lib/api.ts";
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    phone: "",
-    otp: "",
+    email: "",
+    password: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,49 +20,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      let user;
-      let token;
+      // Mock Login Logic: Pure LocalStorage
+      const existingUsersStr = localStorage.getItem("registered_users");
+      const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
       
-      const isVercel = window.location.hostname.includes("vercel.app");
-      let useMock = isVercel;
+      const foundUser = users.find(
+        (u: any) => u.email === formData.email && u.password === formData.password
+      );
       
-      if (!useMock) {
-        try {
-          const res = await apiLogin(formData.phone, formData.otp);
-          user = res.user;
-          token = res.token;
-        } catch (err: any) {
-          console.warn("Backend login failed, using mock fallback:", err);
-          useMock = true;
-        }
+      if (!foundUser) {
+        throw new Error("Invalid email or password. Please try again.");
       }
       
-      if (useMock) {
-        const existingUsersStr = localStorage.getItem("civicai-users");
-        const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
-        const foundUser = users.find((u: any) => u.phone === formData.phone);
-        
-        if (foundUser) {
-          // Remove password before assigning to user object if we want it clean, but for mock it's fine
-          user = foundUser;
-        } else {
-          // Graceful Fallback / Mock Success for unregistered phone numbers
-          user = {
-            id: "usr-citizen-01",
-            name: "CivicAI Citizen (Mock)",
-            email: "citizen@civicai.local",
-            phone: formData.phone || "+15551234",
-            role: "citizen",
-            tenantId: "municipality-sf",
-            reputationScore: 100,
-            createdAt: new Date().toISOString(),
-          };
-        }
-        token = "mock-jwt-token-12345";
-      }
+      const token = `mock-jwt-token-${Date.now()}`;
+      
+      // Remove password from stored user session
+      const { password, ...userWithoutPassword } = foundUser;
       
       localStorage.setItem("civicai-token", token);
-      localStorage.setItem("civicai-user", JSON.stringify(user));
+      localStorage.setItem("current_user", JSON.stringify(userWithoutPassword));
+      // Keep old key for backward compatibility in the rest of the app
+      localStorage.setItem("civicai-user", JSON.stringify(userWithoutPassword));
       
       // Dispatch a storage event so App.tsx picks up the user immediately without a reload
       window.dispatchEvent(new Event("storage"));
@@ -102,30 +79,30 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Phone Number</label>
+            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Email</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 required
-                type="tel"
-                placeholder="+1 555-1234"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                type="email"
+                placeholder="citizen@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50 transition-all outline-none text-sm font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">OTP / Passcode</label>
+            <label className="text-xs font-bold text-foreground/60 uppercase tracking-wider ml-1">Password</label>
             <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 required
-                type="text"
-                placeholder="123456"
-                value={formData.otp}
-                onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                type="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:border-[#00F2FE] focus:ring-2 focus:ring-[#00F2FE]/50 transition-all outline-none text-sm font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
@@ -141,21 +118,20 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo credentials hint & Fill Button */}
         <div className="mt-6 rounded-xl border border-[#00F2FE]/20 bg-[#00F2FE]/5 px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#00F2FE] mb-1.5">
               Demo Quick Login
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
-              Phone: <span className="text-slate-900 dark:text-slate-100 font-semibold">+1 555-1234</span> <br className="sm:hidden" />
-              <span className="hidden sm:inline">&nbsp;|&nbsp;</span> OTP: <span className="text-slate-900 dark:text-slate-100 font-semibold">Any 6 digits</span>
+              Email: <span className="text-slate-900 dark:text-slate-100 font-semibold">citizen@example.com</span> <br className="sm:hidden" />
+              <span className="hidden sm:inline">&nbsp;|&nbsp;</span> Password: <span className="text-slate-900 dark:text-slate-100 font-semibold">password123</span>
             </p>
           </div>
           <button
             type="button"
             onClick={() => {
-              setFormData({ phone: "+1 555-1234", otp: "123456" });
+              setFormData({ email: "citizen@example.com", password: "password123" });
             }}
             className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
           >

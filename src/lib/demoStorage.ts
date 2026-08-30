@@ -1,4 +1,5 @@
 import type { CivicIssue } from "../types";
+import type { ComplaintRecord } from "./complaintData";
 
 const REPORTS_KEY = "civicai-demo-reports";
 
@@ -88,6 +89,94 @@ const MOCK_ISSUES: CivicIssue[] = [
   }
 ];
 
+const COMPLAINTS_KEY = "civicai-demo-complaints";
+
+export const MOCK_COMPLAINTS: ComplaintRecord[] = [
+  {
+    id: "FHS-10001",
+    category: "Food & Health Safety",
+    subType: "Unhygienic Conditions",
+    establishmentName: "Dragon Palace Restaurant",
+    description: "Kitchen area visible from entrance with open drain and flies. Staff not wearing gloves.",
+    severity: "High",
+    latitude: 37.7762,
+    longitude: -122.4183,
+    incidentAt: new Date(Date.now() - 86400000).toISOString(),
+    reportedAt: new Date(Date.now() - 82800000).toISOString(),
+    imageUrl: "https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&q=80&w=400",
+    status: "Under Review",
+  },
+  {
+    id: "FHS-10002",
+    category: "Food & Health Safety",
+    subType: "Food Poisoning / Expired Food",
+    establishmentName: "QuickBite Deli",
+    description: "Multiple customers reported food poisoning after consuming sandwiches on 28 Aug. Expiry dates not visible.",
+    severity: "Critical",
+    latitude: 37.7738,
+    longitude: -122.4210,
+    incidentAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    reportedAt: new Date(Date.now() - 86400000 * 2 + 3600000).toISOString(),
+    imageUrl: undefined,
+    status: "Escalated",
+  },
+  {
+    id: "FHS-10003",
+    category: "Food & Health Safety",
+    subType: "Unlicensed Food Vendor",
+    establishmentName: "Street Cart – Corner of Oak & 3rd",
+    description: "Unlicensed mobile cart selling raw seafood without refrigeration. No health permit displayed.",
+    severity: "Medium",
+    latitude: 37.7753,
+    longitude: -122.4170,
+    incidentAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    reportedAt: new Date(Date.now() - 86400000 * 3 + 1800000).toISOString(),
+    imageUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400",
+    status: "Reported",
+  },
+  {
+    id: "FHS-10004",
+    category: "Food & Health Safety",
+    subType: "Pest Contamination",
+    establishmentName: "Sunrise Bakery",
+    description: "Rodent droppings found near bread display shelves. Pest sighting reported by two separate customers.",
+    severity: "High",
+    latitude: 37.7745,
+    longitude: -122.4225,
+    incidentAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    reportedAt: new Date(Date.now() - 86400000 * 4 + 7200000).toISOString(),
+    imageUrl: undefined,
+    status: "Resolved",
+  },
+  {
+    id: "TRF-10001",
+    category: "Traffic Jam",
+    subType: "Broken Traffic Light",
+    establishmentName: "5th Ave & Market St",
+    description: "Traffic signal stuck on red, causing major gridlock at peak hours.",
+    severity: "High",
+    latitude: 37.7770,
+    longitude: -122.4160,
+    incidentAt: new Date(Date.now() - 3600000).toISOString(),
+    reportedAt: new Date(Date.now() - 3000000).toISOString(),
+    imageUrl: undefined,
+    status: "Under Review",
+  },
+  {
+    id: "PKG-10001",
+    category: "Illegal Parking",
+    subType: "Blocking Driveway",
+    establishmentName: "22 Elm Street",
+    description: "Red pickup truck (plate: XYZ-4455) blocking residential driveway for 2+ hours.",
+    severity: "Medium",
+    latitude: 37.7735,
+    longitude: -122.4190,
+    incidentAt: new Date(Date.now() - 7200000).toISOString(),
+    reportedAt: new Date(Date.now() - 6800000).toISOString(),
+    imageUrl: undefined,
+    status: "Reported",
+  },
+];
 export function loadDemoReports(): CivicIssue[] {
   try {
     const stored = localStorage.getItem(REPORTS_KEY);
@@ -110,4 +199,24 @@ export function saveDemoReport(report: CivicIssue): CivicIssue[] {
 
 export function updateDemoReport(report: CivicIssue): CivicIssue[] {
   return saveDemoReport(report);
+}
+
+export function loadDemoComplaints(): ComplaintRecord[] {
+  try {
+    const stored = localStorage.getItem(COMPLAINTS_KEY);
+    if (!stored) {
+      localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(MOCK_COMPLAINTS));
+      return MOCK_COMPLAINTS;
+    }
+    const records = JSON.parse(stored) as ComplaintRecord[];
+    return Array.isArray(records) && records.length > 0 ? records : MOCK_COMPLAINTS;
+  } catch {
+    return MOCK_COMPLAINTS;
+  }
+}
+
+export function saveDemoComplaint(record: ComplaintRecord): ComplaintRecord[] {
+  const all = [record, ...loadDemoComplaints().filter((r) => r.id !== record.id)];
+  localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(all));
+  return all;
 }

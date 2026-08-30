@@ -49,11 +49,13 @@ export default function App() {
 
   // Restore session
   useEffect(() => {
-    const userJson = localStorage.getItem("civicai-user");
+    // Check both for backward compatibility
+    const userJson = localStorage.getItem("current_user") || localStorage.getItem("civicai-user");
     if (userJson) {
       try {
         setCurrentUser(JSON.parse(userJson));
       } catch (e) {
+        localStorage.removeItem("current_user");
         localStorage.removeItem("civicai-user");
         localStorage.removeItem("civicai-token");
       }
@@ -63,6 +65,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem("civicai-token");
     localStorage.removeItem("civicai-user");
+    localStorage.removeItem("current_user"); // Remove as explicitly requested
     setCurrentUser(null);
     navigate("/");
   };
