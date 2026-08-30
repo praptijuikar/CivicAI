@@ -14,33 +14,39 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent, directRole?: "citizen" | "admin") => {
+    if (e) e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // Mock Login Logic: Pure LocalStorage
-      const existingUsersStr = localStorage.getItem("registered_users");
-      const users = existingUsersStr ? JSON.parse(existingUsersStr) : [];
-      
-      const foundUser = users.find(
-        (u: any) => u.email === formData.email && u.password === formData.password
-      );
-      
-      if (!foundUser) {
-        throw new Error("Invalid email or password. Please try again.");
-      }
-      
       const token = `mock-jwt-token-${Date.now()}`;
       
-      // Remove password from stored user session
-      const { password, ...userWithoutPassword } = foundUser;
+      let email = formData.email;
+      let role = "citizen";
+      let name = "Demo Citizen";
+      
+      if (directRole === "admin" || email === "admin@example.com") {
+        email = "admin@example.com";
+        role = "admin";
+        name = "System Admin";
+      } else if (directRole === "citizen") {
+        email = "citizen@example.com";
+        role = "citizen";
+        name = "Demo Citizen";
+      }
+
+      const mockUser = {
+        id: `mock-id-${Date.now()}`,
+        name,
+        email,
+        role
+      };
       
       localStorage.setItem("civicai-token", token);
-      localStorage.setItem("current_user", JSON.stringify(userWithoutPassword));
+      localStorage.setItem("current_user", JSON.stringify(mockUser));
       // Keep old key for backward compatibility in the rest of the app
-      localStorage.setItem("civicai-user", JSON.stringify(userWithoutPassword));
+      localStorage.setItem("civicai-user", JSON.stringify(mockUser));
       
       // Dispatch a storage event so App.tsx picks up the user immediately without a reload
       window.dispatchEvent(new Event("storage"));
@@ -124,19 +130,25 @@ export default function LoginPage() {
               Demo Quick Login
             </p>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
-              Email: <span className="text-slate-900 dark:text-slate-100 font-semibold">citizen@example.com</span> <br className="sm:hidden" />
-              <span className="hidden sm:inline">&nbsp;|&nbsp;</span> Password: <span className="text-slate-900 dark:text-slate-100 font-semibold">password123</span>
+              Bypass authentication for testing.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setFormData({ email: "citizen@example.com", password: "password123" });
-            }}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
-          >
-            Auto-fill Credentials
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e, "citizen")}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
+            >
+              Login as Citizen
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e, "admin")}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors border border-amber-500/20 whitespace-nowrap"
+            >
+              Login as Admin
+            </button>
+          </div>
         </div>
 
         <p className="text-center text-sm font-medium text-foreground/60 mt-8">
