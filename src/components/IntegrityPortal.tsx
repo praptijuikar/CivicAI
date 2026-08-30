@@ -54,7 +54,17 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
   const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [exifGpsNote, setExifGpsNote] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [fileSha256, setFileSha256] = useState<string | null>(null);
+  const [isHashing, setIsHashing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ALLOWED_TYPES = new Set([
+    "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif",
+    "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac",
+    "application/pdf",
+  ]);
+  const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
   // ── EXIF GPS Helper ───────────────────────────────────────────────────────
   function dmsToDecimal(dms: number[], ref: string): number {
@@ -93,9 +103,40 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
   }
 
   function handleFileSelect(file: File) {
+    if (!ALLOWED_TYPES.has(file.type)) {
+      setFileError(
+        `❌ Unsupported format "${file.type || "unknown"}". Accepted: JPEG, PNG, WEBP, HEIC, MP3, WAV, OGG, PDF.`
+      );
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      const mb = (file.size / 1024 / 1024).toFixed(1);
+      setFileError(`❌ File is ${mb} MB — exceeds the 50 MB limit. Please compress or trim the file.`);
+      return;
+    }
+    setFileError(null);
     setEvidenceFile(file);
     setExifGpsNote(null);
+    setFileSha256(null);
     extractExifAndApply(file);
+    setIsHashing(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const buffer = reader.result as ArrayBuffer;
+        const hashBuffer = await window.crypto.subtle.digest("SHA-256", buffer);
+        const hex = Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        setFileSha256(hex);
+      } catch {
+        setFileSha256(null);
+      } finally {
+        setIsHashing(false);
+      }
+    };
+    reader.onerror = () => setIsHashing(false);
+    reader.readAsArrayBuffer(file);
   }
 
   const isInvestigator = currentUser.role === "investigator" || currentUser.role === "admin";
@@ -304,7 +345,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                     ref={fileInputRef}
                     type="file"
                     multiple={false}
-                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                    accept="image/jpeg,image/png,image/webp,image/heic,audio/mpeg,audio/wav,audio/ogg,audio/mp4,application/pdf"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -357,6 +398,9 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                             e.stopPropagation();
                             setEvidenceFile(null);
                             setExifGpsNote(null);
+                            setFileSha256(null);
+                            setFileError(null);
+                            setIsHashing(false);
                           }}
                           className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 hover:bg-rose-500/20 transition shrink-0"
                         >
@@ -377,6 +421,28 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                       </>
                     )}
                   </div>
+
+                  {/* SHA-256 hash display */}
+                  {(isHashing || fileSha256) && (
+                    <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                      <Fingerprint className="w-3.5 h-3.5 text-purple-400 mt-0.5 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-purple-400 mb-0.5">Client-Side SHA-256</p>
+                        {isHashing ? (
+                          <p className="text-[10px] font-mono text-foreground/50 animate-pulse">Computing digest…</p>
+                        ) : (
+                          <p className="text-[10px] font-mono text-foreground/80 break-all select-all leading-relaxed">{fileSha256}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File error */}
+                  {fileError && (
+                    <p className="text-[11px] font-medium px-3 py-2 rounded-lg border bg-rose-500/10 border-rose-500/30 text-rose-400">
+                      {fileError}
+                    </p>
+                  )}
 
                   {/* EXIF GPS feedback */}
                   {exifGpsNote && (
@@ -435,11 +501,17 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition"
+                  disabled={isSubmitting || isHashing || !evidenceFile}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-foreground font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Fingerprint className="w-4 h-4" />
-                  {isSubmitting ? "Computing SHA-256 Digest & Encrypting..." : "Generate Cryptographic Evidence Hash & Submit"}
+                  {isHashing
+                    ? "Computing SHA-256 Digest…"
+                    : isSubmitting
+                    ? "Encrypting & Sealing Ledger Entry…"
+                    : !evidenceFile
+                    ? "Attach Evidence File to Continue"
+                    : "Generate Cryptographic Evidence Hash & Submit"}
                 </button>
               </form>
             ) : (
