@@ -59,11 +59,6 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
   const [isHashing, setIsHashing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const ALLOWED_TYPES = new Set([
-    "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif",
-    "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac",
-    "application/pdf",
-  ]);
   const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
   // ── EXIF GPS Helper ───────────────────────────────────────────────────────
@@ -103,9 +98,14 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
   }
 
   function handleFileSelect(file: File) {
-    if (!ALLOWED_TYPES.has(file.type)) {
+    const isImage = file.type.startsWith("image/");
+    const isAudio = file.type.startsWith("audio/");
+    const isVideo = file.type.startsWith("video/");
+    const isDoc = file.type === "application/pdf" || file.name.endsWith(".doc") || file.name.endsWith(".docx");
+    
+    if (!isImage && !isAudio && !isVideo && !isDoc) {
       setFileError(
-        `❌ Unsupported format "${file.type || "unknown"}". Accepted: JPEG, PNG, WEBP, HEIC, MP3, WAV, OGG, PDF.`
+        `❌ Unsupported format "${file.type || "unknown"}". Accepted: Images, Audio, Video, PDF, DOC, DOCX.`
       );
       return;
     }
@@ -345,8 +345,8 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                     ref={fileInputRef}
                     type="file"
                     multiple={false}
-                    accept="image/jpeg,image/png,image/webp,image/heic,audio/mpeg,audio/wav,audio/ogg,audio/mp4,application/pdf"
-                    className="hidden"
+                    accept="image/*,audio/*,video/*,.pdf,.doc,.docx"
+                    style={{ display: 'none' }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) handleFileSelect(file);
@@ -381,10 +381,10 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                             <FileImage className="w-5 h-5 text-red-400" />
                           </div>
                           <div className="text-left min-w-0">
-                            <p className="text-xs font-semibold text-foreground truncate max-w-[200px]">
+                            <p className="text-xs font-semibold text-emerald-400 truncate max-w-[200px]">
                               {evidenceFile.name}
                             </p>
-                            <p className="text-[10px] text-foreground/50 font-mono">
+                            <p className="text-[10px] text-emerald-400/80 font-mono">
                               {evidenceFile.size < 1024 * 1024
                                 ? `${(evidenceFile.size / 1024).toFixed(1)} KB`
                                 : `${(evidenceFile.size / 1024 / 1024).toFixed(2)} MB`}
@@ -409,13 +409,13 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                       </div>
                     ) : (
                       <>
-                        <Upload className="w-6 h-6 text-red-400 mx-auto" />
-                        <p className="text-xs font-semibold text-gray-200">
+                        <Upload className="w-6 h-6 text-red-400 mx-auto pointer-events-none" />
+                        <p className="text-xs font-semibold text-gray-200 pointer-events-none">
                           {isDraggingOver
                             ? "Drop file here…"
                             : "Click or drag & drop: Photos, Documents, Audio, Invoices"}
                         </p>
-                        <p className="text-[10px] text-foreground/60 font-mono">
+                        <p className="text-[10px] text-foreground/60 font-mono pointer-events-none">
                           Client-side SHA-256 hash computed before upload
                         </p>
                       </>
