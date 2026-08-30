@@ -6,21 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-986fa5c82.json
-
-*-firebase-adminsdk-*.json
+# Ignore Firebase and other service account JSON keys
+*.json
+*.env
+*.env.local
+node_modules/
+dist/
