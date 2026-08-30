@@ -19,7 +19,7 @@ export default function InteractiveMap({
   issues,
   selectedIssue,
   onSelectIssue,
-  center = [37.7749, -122.4194],
+  center = [19.0760, 72.8777],
   zoom = 13,
   interactivePinLocation,
   onPinChange,
@@ -72,7 +72,7 @@ export default function InteractiveMap({
   // Update center when center prop changes
   useEffect(() => {
     if (mapInstanceRef.current && center) {
-      mapInstanceRef.current.setView(center, zoom, { animate: true });
+      mapInstanceRef.current.flyTo(center, zoom, { animate: true, duration: 1.5 });
     }
   }, [center?.[0], center?.[1], zoom]);
 

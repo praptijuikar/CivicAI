@@ -140,7 +140,7 @@ export default function ComplaintMap({
   civicIssues = [],
   onSelectCivicIssue,
   complaintRecords = [],
-  center = [37.7749, -122.4194],
+  center = [19.0760, 72.8777],
   zoom = 13,
   interactivePinLocation,
   onPinChange,
@@ -193,7 +193,7 @@ export default function ComplaintMap({
   // ── Recenter on prop change ─────────────────────────────────────────────
   useEffect(() => {
     if (mapRef.current) {
-      mapRef.current.setView(center, zoom, { animate: true });
+      mapRef.current.flyTo(center, zoom, { animate: true, duration: 1.5 });
     }
   }, [center[0], center[1], zoom]);
 

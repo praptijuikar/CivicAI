@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent, directRole?: "citizen" | "admin") => {
+  const handleSubmit = async (e: React.FormEvent, isQuickLogin?: boolean) => {
     if (e) e.preventDefault();
     setError("");
     setLoading(true);
@@ -23,17 +23,11 @@ export default function LoginPage() {
       const token = `mock-jwt-token-${Date.now()}`;
       
       let email = formData.email;
-      let role = "citizen";
+      let role = "user";
       let name = "Demo Citizen";
       
-      if (directRole === "admin" || email === "admin@example.com") {
-        email = "admin@example.com";
-        role = "admin";
-        name = "System Admin";
-      } else if (directRole === "citizen") {
+      if (isQuickLogin) {
         email = "citizen@example.com";
-        role = "citizen";
-        name = "Demo Citizen";
       }
 
       const mockUser = {
@@ -136,17 +130,10 @@ export default function LoginPage() {
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               type="button"
-              onClick={(e) => handleSubmit(e, "citizen")}
+              onClick={(e) => handleSubmit(e, true)}
               className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#00F2FE] bg-[#00F2FE]/10 hover:bg-[#00F2FE]/20 transition-colors border border-[#00F2FE]/20 whitespace-nowrap"
             >
               Login as Citizen
-            </button>
-            <button
-              type="button"
-              onClick={(e) => handleSubmit(e, "admin")}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 transition-colors border border-amber-500/20 whitespace-nowrap"
-            >
-              Login as Admin
             </button>
           </div>
         </div>

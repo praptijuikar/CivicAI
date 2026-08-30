@@ -109,6 +109,7 @@ import { createDemoReportId, loadDemoReports, saveDemoReport, updateDemoReport, 
 import TrafficReportForm from "./TrafficReportForm";
 import ComplaintMap from "./ComplaintMap";
 import type { ComplaintRecord } from "../lib/complaintData";
+import { verifyCivicDefect, type AIVerificationResult } from "../lib/aiVerification";
 
 interface CitizenPortalProps {
   currentUser: User;
@@ -134,6 +135,7 @@ export default function CitizenPortal({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"home" | "report" | "my-reports" | "feed">("home");
   const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
+  const [complaintFormCategory, setComplaintFormCategory] = useState<"Traffic Jam" | "Food & Health Safety" | "Illegal Parking">("Traffic Jam");
   const [complaintRecords, setComplaintRecords] = useState<ComplaintRecord[]>(() => loadDemoComplaints());
 
   // Reporting Form State
@@ -141,6 +143,9 @@ export default function CitizenPortal({
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisResult | null>(null);
+  const [aiVerification, setAiVerification] = useState<AIVerificationResult | null>(null);
+  const [isVerifyingImage, setIsVerifyingImage] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   // Form Fields
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -149,9 +154,26 @@ export default function CitizenPortal({
   const [issueSubcategory, setIssueSubcategory] = useState("");
   const [issueDescription, setIssueDescription] = useState("");
   const [issueAddress, setIssueAddress] = useState("");
-  const [issueLatitude, setIssueLatitude] = useState(37.7749);
-  const [issueLongitude, setIssueLongitude] = useState(-122.4194);
+  const [issueLatitude, setIssueLatitude] = useState(19.0760);
+  const [issueLongitude, setIssueLongitude] = useState(72.8777);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Automatically fetch GPS on mount
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setIssueLatitude(pos.coords.latitude);
+          setIssueLongitude(pos.coords.longitude);
+          setIssueAddress(`GPS Pin (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`);
+        },
+        (err) => {
+          console.warn("Geolocation fallback to Mumbai metro coordinates:", err);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, []);
   const [severity, setSeverity] = useState<Severity | "">("");
 
   useEffect(() => {
@@ -280,7 +302,7 @@ export default function CitizenPortal({
           setIsLocating(false);
         },
         (err) => {
-          console.warn("Geolocation fallback to Downtown metro coordinates:", err);
+          console.warn("Geolocation fallback to Mumbai metro coordinates:", err);
           setIsLocating(false);
         },
         { enableHighAccuracy: true, timeout: 5000 }
@@ -314,64 +336,59 @@ export default function CitizenPortal({
     }
   };
 
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     setImageValidationError("");
+    setAiVerification(null);
     if (!file.type.startsWith("image/")) {
       setCapturedImage(null);
-      setImageValidationError("Please upload a valid image file (JPEG, PNG, etc.).");
-      e.target.value = "";
+      setImageValidationError("Please upload a valid image file (JPEG, PNG, WEBP, HEIC).");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onerror = () => {
-      setCapturedImage(null);
-      setImageValidationError("Unable to read the file. It may be corrupted.");
-    };
-    reader.onload = () => {
-      const image = new Image();
-      image.onload = () => {
-        const validation = validateImage(image);
-        if (!validation.valid) {
-          setCapturedImage(null);
-          setReportStep("media");
-          setImageValidationError(validation.reason || "Image failed validation. Please upload a clear photo.");
-          return;
-        }
-        
-        EXIF.getData(image as any, function (this: any) {
-          const lat = EXIF.getTag(this, "GPSLatitude");
-          const latRef = EXIF.getTag(this, "GPSLatitudeRef");
-          const lng = EXIF.getTag(this, "GPSLongitude");
-          const lngRef = EXIF.getTag(this, "GPSLongitudeRef");
+    setIsVerifyingImage(true);
+    try {
+      const verificationResult = await verifyCivicDefect(file);
+      if (!verificationResult.valid) {
+        setImageValidationError(verificationResult.reason || "Image verification failed.");
+        setCapturedImage(null);
+        return;
+      }
 
-          if (lat && latRef && lng && lngRef) {
-            const latitude = convertDMSToDD(lat, latRef);
-            const longitude = convertDMSToDD(lng, lngRef);
-            
-            if (latitude !== null && longitude !== null) {
-              setIssueLatitude(latitude);
-              setIssueLongitude(longitude);
-              setIssueAddress(`GPS Pin (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
-              setImageValidationError("");
-            }
-          } else {
-            setImageValidationError("No location metadata found in this photo. Please upload an uncompressed original image taken with location enabled.");
+      setAiVerification(verificationResult);
+      if (verificationResult.exifTags) {
+        const lat = verificationResult.exifTags.lat;
+        const latRef = verificationResult.exifTags.latRef;
+        const lng = verificationResult.exifTags.lng;
+        const lngRef = verificationResult.exifTags.lngRef;
+        if (lat && latRef && lng && lngRef) {
+          const latitude = convertDMSToDD(lat, latRef);
+          const longitude = convertDMSToDD(lng, lngRef);
+          if (latitude !== null && longitude !== null) {
+            setIssueLatitude(latitude);
+            setIssueLongitude(longitude);
+            setIssueAddress(`GPS Pin (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
           }
-        });
+        }
+      }
 
+      const reader = new FileReader();
+      reader.onload = () => {
         void handleImageSelected(reader.result as string, file.name);
       };
-      image.onerror = () => {
-        setCapturedImage(null);
-        setImageValidationError("Unable to load the image. The file may be corrupted.");
-      };
-      image.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      setImageValidationError("An error occurred during verification.");
+    } finally {
+      setIsVerifyingImage(false);
+    }
+  };
+
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+    e.target.value = "";
   };
 
   // Demo submissions are local and do not require a duplicate-check API.
@@ -601,39 +618,82 @@ export default function CitizenPortal({
               </div>
             </TiltBentoCard>
 
-            {/* Bento Card 2b: Traffic / Parking Complaint */}
-            <TiltBentoCard
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
-              }}
-              onClick={() => setIsTrafficModalOpen(true)}
-              className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-amber-500/20"
-              glowColor="hover:border-amber-500/40 hover:shadow-amber-500/5"
-            >
-              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
-              <div style={{ transform: "translateZ(10px)" }}>
-                <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
-                    <AlertTriangle className="w-5 h-5" />
+            {/* Secondary Services Row */}
+            <div className="md:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Bento Card 2b: Traffic / Parking Complaint */}
+              <TiltBentoCard
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                }}
+                onClick={() => {
+                  setComplaintFormCategory("Traffic Jam");
+                  setIsTrafficModalOpen(true);
+                }}
+                className="glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-amber-500/20"
+                glowColor="hover:border-amber-500/40 hover:shadow-amber-500/5"
+              >
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                <div style={{ transform: "translateZ(10px)" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Traffic Unit
+                    </span>
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    Traffic Unit
-                  </span>
+                  <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
+                    Traffic &amp; Parking
+                    <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition" />
+                  </h3>
+                  <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
+                    Report traffic jams, illegally parked vehicles, or road hazards. Auto-extract GPS from your photo.
+                  </p>
                 </div>
-                <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
-                  Traffic &amp; Parking
-                  <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition" />
-                </h3>
-                <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
-                  Report traffic jams, illegally parked vehicles, or road hazards. Auto-extract GPS from your photo.
-                </p>
-              </div>
-              <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-amber-400 font-bold">
-                <span>EXIF GPS • Map Pin • Photo Evidence</span>
-                <span>File Complaint &rarr;</span>
-              </div>
-            </TiltBentoCard>
+                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-amber-400 font-bold">
+                  <span>EXIF GPS • Map Pin • Photo Evidence</span>
+                  <span>File Complaint &rarr;</span>
+                </div>
+              </TiltBentoCard>
+
+              {/* Bento Card 2c: Health & Govt Unit Complaint */}
+              <TiltBentoCard
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                }}
+                onClick={() => {
+                  setComplaintFormCategory("Food & Health Safety");
+                  setIsTrafficModalOpen(true);
+                }}
+                className="glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-emerald-500/20"
+                glowColor="hover:border-emerald-500/40 hover:shadow-emerald-500/5"
+              >
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-emerald-500/5 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                <div style={{ transform: "translateZ(10px)" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition">
+                      <PlusCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      HEALTH & GOVT UNIT
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
+                    Health & Civic Services
+                    <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition" />
+                  </h3>
+                  <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
+                    Report hospital negligence, unhygienic facilities, lack of medical staff, or misconduct/delays at government offices.
+                  </p>
+                </div>
+                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-emerald-400 font-bold">
+                  <span>Encrypted Vault • Geo-Tagged • Anonymous</span>
+                  <span>File Complaint &rarr;</span>
+                </div>
+              </TiltBentoCard>
+            </div>
 
             {/* Bento Card 3: Interactive Map */}
             <motion.div
@@ -657,6 +717,7 @@ export default function CitizenPortal({
                   civicIssues={issues}
                   onSelectCivicIssue={onSelectIssue}
                   complaintRecords={complaintRecords}
+                  center={[issueLatitude, issueLongitude]}
                   showFilterBar={true}
                   className="w-full h-full"
                 />
@@ -745,10 +806,12 @@ export default function CitizenPortal({
                   {/* Modal Body */}
                   <div className="overflow-y-auto max-h-[80vh] px-6 py-5">
                     <TrafficReportForm
+                      initialCategory={complaintFormCategory}
                       onClose={() => setIsTrafficModalOpen(false)}
                       onComplaintSubmitted={(record) => {
-                        const updated = saveDemoComplaint(record);
-                        setComplaintRecords(updated);
+                        setComplaintRecords(prev => [record, ...prev]);
+                        saveDemoComplaint(record);
+                        setIsTrafficModalOpen(false);
                       }}
                     />
                   </div>
@@ -851,25 +914,59 @@ export default function CitizenPortal({
                 {/* Drag & Drop Upload Zone */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="group cursor-pointer border-2 border-dashed border-border-subtle hover:border-foreground/20 hover:border-saffron rounded-2xl p-8 bg-background/60 hover:bg-background transition text-center space-y-3"
+                  onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+                  onDragLeave={() => setIsDraggingOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDraggingOver(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) processFile(file);
+                  }}
+                  className={`group cursor-pointer border-2 border-dashed rounded-2xl p-8 bg-background/60 transition text-center space-y-3 ${
+                    isDraggingOver
+                      ? "border-saffron bg-saffron/5"
+                      : "border-border-subtle hover:border-foreground/20 hover:border-saffron hover:bg-background"
+                  }`}
                 >
                   <input
                     type="file"
                     ref={fileInputRef}
                     onChange={handleFileUpload}
-                    accept="image/*"
-                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,image/heic"
+                    style={{ display: 'none' }}
                   />
-                  <div className="w-14 h-14 rounded-2xl bg-saffron/10 border border-saffron/30 flex items-center justify-center text-ashoka-navy dark:text-ashoka-navy mx-auto group-hover:scale-110 transition">
-                    <Camera className="w-7 h-7" />
+                  <div className="w-14 h-14 rounded-2xl bg-saffron/10 border border-saffron/30 flex items-center justify-center text-ashoka-navy dark:text-ashoka-navy mx-auto group-hover:scale-110 transition pointer-events-none">
+                    {isVerifyingImage ? (
+                      <RefreshCw className="w-7 h-7 animate-spin" />
+                    ) : (
+                      <Camera className="w-7 h-7" />
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Click to Take Camera Photo or Upload File</p>
-                    <p className="text-xs text-foreground/60 mt-1">Supports High-Resolution JPEG, PNG, WEBP</p>
+                  <div className="pointer-events-none">
+                    <p className="text-sm font-semibold text-foreground">
+                      {isVerifyingImage ? "Verifying image integrity..." : "Click to Take Camera Photo or Upload File"}
+                    </p>
+                    <p className="text-xs text-foreground/60 mt-1">Supports High-Resolution JPEG, PNG, WEBP, HEIC</p>
                   </div>
                 </div>
+
+                {/* AI Verification Badge */}
+                {aiVerification?.valid && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs font-medium text-emerald-400 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <div>
+                      <p className="font-bold">✓ AI Verified Real Photo ({aiVerification.confidenceScore}% Confidence)</p>
+                      <p className="text-[10px] text-emerald-400/80 mt-0.5">
+                        Predicted Category: {aiVerification.categoryPrediction}
+                        {aiVerification.exifTags?.lat && " | GPS Extracted"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {imageValidationError && (
-                  <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700" role="alert">
+                  <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-medium text-rose-400 flex items-center gap-2" role="alert">
+                    <AlertTriangle className="w-4 h-4 shrink-0" />
                     {imageValidationError}
                   </p>
                 )}

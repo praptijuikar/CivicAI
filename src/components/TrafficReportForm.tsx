@@ -77,6 +77,7 @@ interface TrafficReportFormProps {
   onClose: () => void;
   /** Called when a complaint is successfully submitted */
   onComplaintSubmitted?: (record: ComplaintRecord) => void;
+  initialCategory?: "Food & Health Safety" | "Traffic Jam" | "Illegal Parking";
 }
 
 // local-only store so the map in the modal reflects already-submitted complaints
@@ -85,9 +86,10 @@ const SESSION_RECORDS: ComplaintRecord[] = [];
 export default function TrafficReportForm({
   onClose,
   onComplaintSubmitted,
+  initialCategory = "Traffic Jam",
 }: TrafficReportFormProps) {
   // ── Category & sub-type ─────────────────────────────────────────────────
-  const [category, setCategory] = useState<ComplaintCategory>("Food & Health Safety");
+  const [category, setCategory] = useState<"Food & Health Safety" | "Traffic Jam" | "Illegal Parking">(initialCategory);
   const cfg = COMPLAINT_CATEGORY_CONFIG[category];
   const [subType, setSubType] = useState<ComplaintSubType>(cfg.subTypes[0]);
 
@@ -129,7 +131,11 @@ export default function TrafficReportForm({
   const pinLocation: [number, number] | null =
     latitude !== null && longitude !== null ? [latitude, longitude] : null;
   const mapCenter: [number, number] =
-    latitude !== null && longitude !== null ? [latitude, longitude] : [37.7749, -122.4194];
+    latitude !== null && longitude !== null ? [latitude, longitude] : [19.0760, 72.8777];
+
+  useEffect(() => {
+    handleGetLocation();
+  }, []);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
