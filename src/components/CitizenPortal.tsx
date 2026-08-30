@@ -19,6 +19,7 @@ import {
 import { motion, useMotionValue, useTransform, useSpring } from "motion/react";
 import { submitCivicIssue, analyzeImage } from "../lib/api";
 import EXIF from "exif-js";
+import SubmissionSuccessModal from "./SubmissionSuccessModal";
 
 function convertDMSToDD(degrees: number[], ref: string) {
   if (!degrees || degrees.length < 3) return null;
@@ -402,6 +403,8 @@ export default function CitizenPortal({
     setIsSubmittingReport(true);
     setSubmissionError("");
     try {
+      const refId = `ISS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+      
       const complaintPayload = {
         title: issueTitle || `${issueSubcategory || "Civic Defect"} at ${issueAddress.split(",")[0]}`,
         category: issueCategory,
@@ -420,10 +423,31 @@ export default function CitizenPortal({
         isAnonymous
       };
 
+      const localRecord = {
+        id: refId,
+        category: issueCategory,
+        subtype: issueSubcategory || "Infrastructure Defect",
+        description: issueDescription,
+        location: issueAddress,
+        coordinates: { lat: issueLatitude, lng: issueLongitude },
+        photoUrl: capturedImage,
+        timestamp: new Date().toISOString(),
+        status: "Pending"
+      };
+
+      try {
+        const stored = JSON.parse(localStorage.getItem("civic_complaints") || "[]");
+        stored.push(localRecord);
+        localStorage.setItem("civic_complaints", JSON.stringify(stored));
+        window.dispatchEvent(new CustomEvent("new_complaint_added"));
+        window.dispatchEvent(new Event("storage"));
+      } catch (e) {}
+
       const { issue } = await submitCivicIssue(complaintPayload);
+      issue.id = refId;
 
       onReportCreated(issue);
-      setCreatedIssueId(issue.id);
+      setCreatedIssueId(refId);
       setReportStep("success");
       confetti({
         particleCount: 100,
@@ -1326,83 +1350,18 @@ export default function CitizenPortal({
 
           {/* SUCCESS SCREEN */}
           {reportStep === "success" && (
-            <div className="py-4 space-y-6 max-w-lg mx-auto">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-india-green/20 border border-emerald-500/40 flex items-center justify-center text-india-green mx-auto animate-bounce">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold text-foreground">Issue Reported Successfully</h3>
-                  <p className="text-sm text-foreground/60">Your complaint has been registered.</p>
-                </div>
-              </div>
-
-              <div className="bg-surface/80 dark:bg-slate-100/80 dark:border-white/10 border border-border-subtle rounded-2xl p-5 space-y-4 shadow-xl">
-                <div>
-                  <p className="text-[10px] text-foreground/60 font-bold uppercase tracking-wider mb-1">Complaint ID</p>
-                  <p className="text-lg font-mono font-bold text-ashoka-navy dark:text-ashoka-navy">{createdIssueId}</p>
-                </div>
-
-                <div className="pt-3 border-t border-border-subtle/60 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-foreground/80">{issueCategory}</p>
-                  </div>
-                  {aiAnalysis?.verificationStatus === "verified" ? (
-                    <span className="text-[10px] font-bold px-2 py-1 bg-emerald-950/60 text-india-green border border-emerald-700/50 rounded-full flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> AI Verified
-                    </span>
-                  ) : aiAnalysis?.verificationStatus === "needs_review" ? (
-                    <span className="text-[10px] font-bold px-2 py-1 bg-amber-950/60 text-amber-400 border border-amber-700/50 rounded-full flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> Needs Human Review
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="pt-3 border-t border-border-subtle/60 space-y-1">
-                  <div className="flex items-start gap-2 text-foreground/80">
-                    <MapPin className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    <p className="text-sm leading-tight">{issueAddress || `Lat: ${issueLatitude.toFixed(4)}, Lng: ${issueLongitude.toFixed(4)}`}</p>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-border-subtle/60 flex justify-between items-center">
-                  <p className="text-xs font-bold text-foreground/60">Status</p>
-                  <span className="text-xs font-bold text-foreground bg-background px-3 py-1 rounded-full border border-border-subtle hover:border-foreground/20">Submitted</span>
-                </div>
-              </div>
-
-              <div className="bg-indigo-950/30 border border-indigo-500/20 rounded-xl p-4 flex items-start gap-3">
-                <div className="p-2 bg-indigo-900/50 rounded-lg text-indigo-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-indigo-200">Confirmation email sent</p>
-                  <p className="text-xs text-indigo-300/70 mt-0.5">We sent a receipt and tracking link to <strong className="text-indigo-300">{currentUser.email}</strong></p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("my-reports")}
-                  className="flex-1 py-3 rounded-xl bg-saffron hover:bg-saffron/90 text-foreground font-bold text-sm shadow-lg shadow-cyan-600/30 transition text-center"
-                >
-                  Track Complaint
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReportStep("media");
-                    setCapturedImage(null);
-                    setIssueTitle("");
-                    setIssueDescription("");
-                  }}
-                  className="flex-1 py-3 rounded-xl bg-background hover:bg-slate-100 text-foreground/80 font-bold text-sm border border-border-subtle hover:border-foreground/20 transition text-center"
-                >
-                  Report Another Issue
-                </button>
-              </div>
-            </div>
+            <SubmissionSuccessModal
+              trackingId={createdIssueId}
+              category={issueCategory}
+              locationName={issueAddress || `Lat: ${issueLatitude.toFixed(4)}, Lng: ${issueLongitude.toFixed(4)}`}
+              onTrackComplaint={() => setActiveTab("my-reports")}
+              onReportAnother={() => {
+                setReportStep("media");
+                setCapturedImage(null);
+                setIssueTitle("");
+                setIssueDescription("");
+              }}
+            />
           )}
         </div>
       )}

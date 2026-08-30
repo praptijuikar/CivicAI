@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { VoiceField } from "./VoiceControls";
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import confetti from "canvas-confetti";
+import SubmissionSuccessModal from "./SubmissionSuccessModal";
 import {
   ShieldCheck,
   Fingerprint,
@@ -165,6 +166,28 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
     setIsSubmitting(true);
 
     try {
+      const refId = `ISS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const localRecord = {
+        id: refId,
+        category: category,
+        subtype: departmentInvolved,
+        description: description,
+        location: address,
+        coordinates: { lat: latitude || 0, lng: longitude || 0 },
+        timestamp: new Date().toISOString(),
+        status: "Pending",
+        isConfidential: true
+      };
+
+      try {
+        const stored = JSON.parse(localStorage.getItem("civic_complaints") || "[]");
+        stored.push(localRecord);
+        localStorage.setItem("civic_complaints", JSON.stringify(stored));
+        window.dispatchEvent(new CustomEvent("new_complaint_added"));
+        window.dispatchEvent(new Event("storage"));
+      } catch (e) {}
+
       const res = await api.createIntegrityReport({
         category,
         title: title || `Confidential Allegation: ${category}`,
@@ -177,7 +200,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
       });
 
       setGeneratedHash(res.sha256MasterHash);
-      setCreatedTrackingCode(res.trackingCode);
+      setCreatedTrackingCode(refId);
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       fetchReports();
     } catch (err) {
@@ -515,53 +538,20 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                 </button>
               </form>
             ) : (
-              /* Success Screen with Master Hash */
-              <div className="py-8 space-y-5 text-center animate-in fade-in zoom-in-95">
-                <div className="w-16 h-16 rounded-2xl bg-purple-600/20 border-2 border-purple-500 flex items-center justify-center text-purple-400 mx-auto">
-                  <Fingerprint className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold text-foreground">Integrity Evidence Vault Record Ingested</h3>
-                  <p className="text-xs text-foreground/60">
-                    Your submission has been signed and locked into the classified investigator ledger.
-                  </p>
-                </div>
-
-                {/* Hash Box */}
-                <div className="p-4 rounded-xl bg-background border border-purple-900/60 space-y-2 text-left">
-                  <span className="text-[10px] uppercase font-bold text-purple-300 tracking-wider">
-                    Immutable SHA-256 Evidence Master Digest:
-                  </span>
-                  <div className="p-2.5 bg-surface rounded-lg border border-border-subtle font-mono text-[11px] text-ashoka-navy dark:text-ashoka-navy break-all select-all">
-                    {generatedHash}
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-foreground/60 pt-1">
-                    <span>Tracking Code: <strong className="text-foreground font-mono">{createdTrackingCode}</strong></span>
-                    <span className="text-india-green font-semibold">✓ Cryptographically Sealed</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <button
-                    onClick={() => {
-                      setViewMode("vault_records");
-                    }}
-                    className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-foreground font-bold rounded-xl text-xs transition"
-                  >
-                    View in Investigator Ledger &rarr;
-                  </button>
-                  <button
-                    onClick={() => {
-                      setGeneratedHash(null);
-                      setTitle("");
-                      setDescription("");
-                    }}
-                    className="px-4 py-2.5 bg-background hover:bg-slate-100 text-foreground/80 text-xs font-semibold rounded-xl transition"
-                  >
-                    Submit Another Allegation
-                  </button>
-                </div>
-              </div>
+              <SubmissionSuccessModal
+                trackingId={createdTrackingCode || ""}
+                category={category}
+                locationName={address || "Confidential Location"}
+                onTrackComplaint={() => { window.location.href = '/dashboard'; }}
+                onReportAnother={() => {
+                  setGeneratedHash(null);
+                  setTitle("");
+                  setDescription("");
+                  setAddress("");
+                  setDepartmentInvolved("");
+                  setSuspectedPersonnel("");
+                }}
+              />
             )}
           </div>
 

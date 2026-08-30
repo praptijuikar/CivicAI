@@ -28,6 +28,7 @@ import {
 } from "../lib/complaintData";
 import ComplaintMap from "./ComplaintMap";
 import { verifyCivicDefect } from "../lib/aiVerification";
+import SubmissionSuccessModal from "./SubmissionSuccessModal";
 
 // ─── Re-export payload type ───────────────────────────────────────────────────
 export type { ComplaintRecord };
@@ -265,7 +266,7 @@ export default function TrafficReportForm({
       }
     }
 
-    const refId = `CIV-${Math.floor(100000 + Math.random() * 900000)}`;
+    const refId = `ISS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     
     let finalImageUrl = imageBase64;
     if (finalImageUrl) {
@@ -289,7 +290,7 @@ export default function TrafficReportForm({
     };
 
     const localRecord = {
-      id: `CIV-${Date.now().toString().slice(-6)}`,
+      id: refId,
       category,
       subtype: subType,
       description,
@@ -321,35 +322,24 @@ export default function TrafficReportForm({
     }
   };
 
-  useEffect(() => {
-    if (!submitSuccess) return;
-    const t = setTimeout(onClose, 5500);
-    return () => clearTimeout(t);
-  }, [submitSuccess, onClose]);
-
   // ── Success Screen ────────────────────────────────────────────────────────
   if (submitSuccess) {
-    const currentCfg = COMPLAINT_CATEGORY_CONFIG[category];
     return (
-      <div className="flex flex-col items-center justify-center py-14 text-center gap-5 px-6">
-        <div className={`w-20 h-20 rounded-full ${currentCfg.markerBg} border ${currentCfg.markerBorder} flex items-center justify-center`}>
-          <CheckCircle2 className={`w-10 h-10 ${currentCfg.markerText}`} />
-        </div>
-        <div>
-          <h3 className="text-lg font-black text-foreground">Complaint Submitted!</h3>
-          <p className="text-sm text-foreground/60 mt-1">
-            Your <strong className={currentCfg.markerText}>{category}</strong> complaint has been filed with the relevant authority.
-          </p>
-        </div>
-        <div className={`px-5 py-3 rounded-xl ${currentCfg.markerBg} border ${currentCfg.markerBorder} font-mono ${currentCfg.markerText} text-sm font-bold tracking-widest text-center`}>
-          ✓ Your complaint has been successfully reported! Tracking ID: #{submitSuccess}
-        </div>
-        <p className="text-sm font-medium text-foreground text-center mt-2">A real-time status update has been sent to your registered email address (citizen@example.com).</p>
-        <p className="text-xs text-foreground/40">This window closes in 5 seconds…</p>
-        <button onClick={onClose} className="text-xs text-foreground/60 hover:text-foreground underline transition">
-          Close now
-        </button>
-      </div>
+      <SubmissionSuccessModal
+        trackingId={submitSuccess}
+        category={category}
+        locationName={establishmentName || locationLabel || `${latitude?.toFixed(5)}, ${longitude?.toFixed(5)}`}
+        onTrackComplaint={() => { window.location.href = '/dashboard'; }}
+        onReportAnother={() => {
+          setSubmitSuccess(null);
+          setEstablishmentName("");
+          setDescription("");
+          setLatitude(null);
+          setLongitude(null);
+          setLocationLabel("");
+          removeImage();
+        }}
+      />
     );
   }
 
