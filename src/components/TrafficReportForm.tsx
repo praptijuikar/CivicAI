@@ -215,6 +215,34 @@ export default function TrafficReportForm({
     setExifNote(null);
   };
 
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_DIM = 400;
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_DIM || h > MAX_DIM) {
+          if (w > h) {
+            h = Math.round((h * MAX_DIM) / w);
+            w = MAX_DIM;
+          } else {
+            w = Math.round((w * MAX_DIM) / h);
+            h = MAX_DIM;
+          }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = () => resolve(base64Str);
+      img.src = base64Str;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
@@ -227,6 +255,11 @@ export default function TrafficReportForm({
 
     setIsSubmitting(true);
     const refId = `CIV-${Math.floor(100000 + Math.random() * 900000)}`;
+    
+    let finalImageUrl = imageBase64;
+    if (finalImageUrl) {
+      finalImageUrl = await compressImage(finalImageUrl);
+    }
 
     const record: ComplaintRecord = {
       id: refId,
@@ -239,9 +272,21 @@ export default function TrafficReportForm({
       longitude,
       incidentAt: new Date(incidentAt).toISOString(),
       reportedAt: new Date().toISOString(),
-      imageUrl: imageBase64 ?? undefined,
+      imageUrl: finalImageUrl ?? undefined,
       imageFileName: imageFile?.name,
       status: "Reported",
+    };
+
+    const localRecord = {
+      id: `CIV-${Date.now().toString().slice(-6)}`,
+      category,
+      subtype: subType,
+      description,
+      location: establishmentName || locationLabel || "",
+      coordinates: { lat: latitude, lng: longitude },
+      photoUrl: finalImageUrl,
+      timestamp: new Date().toISOString(),
+      status: "Pending"
     };
 
     try {
@@ -254,8 +299,10 @@ export default function TrafficReportForm({
       
       try {
         const stored = JSON.parse(localStorage.getItem("civic_complaints") || "[]");
-        stored.push(record);
+        stored.push(localRecord);
         localStorage.setItem("civic_complaints", JSON.stringify(stored));
+        window.dispatchEvent(new CustomEvent("new_complaint_added"));
+        window.dispatchEvent(new Event("storage"));
       } catch (e) {}
 
       onComplaintSubmitted?.(record);

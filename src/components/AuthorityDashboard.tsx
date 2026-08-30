@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ShieldAlert,
   Clock,
@@ -49,8 +49,78 @@ export default function AuthorityDashboard({
   const [crisisMode, setCrisisMode] = useState(false);
   const [allocation, setAllocation] = useState<Awaited<ReturnType<typeof api.allocateBudget>>["allocation"] | null>(null);
   const [isAllocating, setIsAllocating] = useState(false);
-  // Fallback to empty array if issues is undefined or null
-  const safeIssues = issues || [];
+  const [localComplaints, setLocalComplaints] = useState<CivicIssue[]>([]);
+
+  useEffect(() => {
+    const loadLocal = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem("civic_complaints") || "[]");
+        const mapped = stored.map((loc: any): CivicIssue => ({
+          id: loc.id,
+          title: `${loc.category} - ${loc.subtype}`,
+          description: loc.description,
+          category: loc.category,
+          subcategory: loc.subtype,
+          severity: "Medium",
+          status: "submitted",
+          createdAt: loc.timestamp,
+          locationAddress: loc.location,
+          address: loc.location,
+          latitude: loc.coordinates?.lat || 0,
+          longitude: loc.coordinates?.lng || 0,
+          initialImageUrl: loc.photoUrl,
+          upvotesCount: 0,
+          upvotes: 0,
+          reportCount: 1,
+          aiUrgencyScore: 50,
+          priorityScore: 50,
+          userId: "anonymous",
+          reporterName: "Anonymous Citizen",
+          assignedDepartment: "Pending Assignment",
+          aiAnalysis: {
+            isValidScene: true,
+            hasVisibleIssue: true,
+            primaryIssueDetected: loc.subtype,
+            isCategoryMismatch: false,
+            isAuthentic: true,
+            authenticityReasoning: "Citizen submitted",
+            predictedCategory: loc.category,
+            subcategory: loc.subtype,
+            confidence: 90,
+            severity: "Medium",
+            calculatedPriorityScore: 50,
+            safetyRisks: [],
+            recommendedDepartment: "General",
+            estimatedResolutionHours: 24,
+            suggestedEquipment: [],
+            actionChecklist: [],
+            summary: loc.description,
+            verificationStatus: "verified",
+            sceneRelevance: "uncertain"
+          },
+          history: [],
+          updatedAt: loc.timestamp
+        }));
+        setLocalComplaints(mapped);
+      } catch(e) {}
+    };
+    loadLocal();
+
+    const handleStorage = () => loadLocal();
+    window.addEventListener("new_complaint_added", handleStorage);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "civic_complaints") handleStorage();
+    });
+
+    return () => {
+      window.removeEventListener("new_complaint_added", handleStorage);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  const combinedIssues = [...localComplaints, ...(issues || [])];
+  const uniqueIssues = Array.from(new Map(combinedIssues.map(item => [item.id, item])).values());
+  const safeIssues = uniqueIssues;
 
   // Filter & Sort Logic
   const filteredIssues = safeIssues
