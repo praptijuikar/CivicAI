@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { VoiceField } from "./VoiceControls";
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import confetti from "canvas-confetti";
 import {
   ShieldCheck,
@@ -12,7 +12,10 @@ import {
   UserCheck,
   Clock,
   CheckCircle2,
+  FileImage,
+  FileX,
 } from "lucide-react";
+import EXIF from "exif-js";
 import { api } from "../lib/api";
 import type { User, IntegrityReport, IntegrityCategory, Language } from "../types";
 
@@ -46,6 +49,54 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
   const [investigatorNote, setInvestigatorNote] = useState("");
   const [newStatus, setNewStatus] = useState<string>("investigation_active");
   const [isUpdatingCase, setIsUpdatingCase] = useState(false);
+
+  // ── File Upload State ─────────────────────────────────────────────────────
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [exifGpsNote, setExifGpsNote] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // ── EXIF GPS Helper ───────────────────────────────────────────────────────
+  function dmsToDecimal(dms: number[], ref: string): number {
+    const [d, m, s] = dms;
+    let dd = d + m / 60 + s / 3600;
+    if (ref === "S" || ref === "W") dd *= -1;
+    return dd;
+  }
+
+  function extractExifAndApply(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      EXIF.getData(img as any, function (this: any) {
+        const lat = EXIF.getTag(this, "GPSLatitude");
+        const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+        const lng = EXIF.getTag(this, "GPSLongitude");
+        const lngRef = EXIF.getTag(this, "GPSLongitudeRef");
+        URL.revokeObjectURL(url);
+        if (lat && latRef && lng && lngRef) {
+          const decLat = dmsToDecimal(lat, latRef);
+          const decLng = dmsToDecimal(lng, lngRef);
+          setLatitude(decLat);
+          setLongitude(decLng);
+          setAddress(`${decLat.toFixed(5)}, ${decLng.toFixed(5)}`);
+          setExifGpsNote(`📡 GPS extracted from photo: ${decLat.toFixed(5)}, ${decLng.toFixed(5)}`);
+        } else {
+          URL.revokeObjectURL(url);
+          setExifGpsNote("⚠️ No GPS metadata in this photo. Location set manually.");
+        }
+      });
+    };
+    img.onerror = () => URL.revokeObjectURL(url);
+    img.src = url;
+  }
+
+  function handleFileSelect(file: File) {
+    setEvidenceFile(file);
+    setExifGpsNote(null);
+    extractExifAndApply(file);
+  }
 
   const isInvestigator = currentUser.role === "investigator" || currentUser.role === "admin";
 
@@ -247,21 +298,96 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                 {/* Evidence Upload Zone */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-foreground/80">Digital Evidence Vault Ingestion</label>
-                  <label className="border-2 border-dashed border-border-subtle hover:border-red-500 rounded-xl p-5 bg-background/60 text-center space-y-2 cursor-pointer transition block relative">
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx" 
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                    />
-                    <Upload className="w-6 h-6 text-red-400 mx-auto" />
-                    <p className="text-xs font-semibold text-gray-200">
-                      Upload Photos, Scanned Documents, Audio recordings, or Invoices
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple={false}
+                    accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileSelect(file);
+                      e.target.value = "";
+                    }}
+                  />
+
+                  {/* Dropzone */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => fileInputRef.current?.click()}
+                    onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setIsDraggingOver(true); }}
+                    onDragLeave={() => setIsDraggingOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDraggingOver(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleFileSelect(file);
+                    }}
+                    className={`border-2 border-dashed rounded-xl p-5 bg-background/60 text-center space-y-2 cursor-pointer transition-colors ${
+                      isDraggingOver
+                        ? "border-red-400 bg-red-500/5"
+                        : "border-border-subtle hover:border-red-500"
+                    }`}
+                  >
+                    {evidenceFile ? (
+                      <div className="flex items-center justify-between gap-3 px-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                            <FileImage className="w-5 h-5 text-red-400" />
+                          </div>
+                          <div className="text-left min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate max-w-[200px]">
+                              {evidenceFile.name}
+                            </p>
+                            <p className="text-[10px] text-foreground/50 font-mono">
+                              {evidenceFile.size < 1024 * 1024
+                                ? `${(evidenceFile.size / 1024).toFixed(1)} KB`
+                                : `${(evidenceFile.size / 1024 / 1024).toFixed(2)} MB`}
+                              {" · "}{evidenceFile.type || "unknown type"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEvidenceFile(null);
+                            setExifGpsNote(null);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 hover:bg-rose-500/20 transition shrink-0"
+                        >
+                          <FileX className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 text-red-400 mx-auto" />
+                        <p className="text-xs font-semibold text-gray-200">
+                          {isDraggingOver
+                            ? "Drop file here…"
+                            : "Click or drag & drop: Photos, Documents, Audio, Invoices"}
+                        </p>
+                        <p className="text-[10px] text-foreground/60 font-mono">
+                          Client-side SHA-256 hash computed before upload
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* EXIF GPS feedback */}
+                  {exifGpsNote && (
+                    <p className={`text-[11px] font-medium px-3 py-2 rounded-lg border ${
+                      exifGpsNote.startsWith("📡")
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    }`}>
+                      {exifGpsNote}
                     </p>
-                    <p className="text-[10px] text-foreground/60 font-mono">
-                      Calculates client-side SHA-256 hash prior to upload
-                    </p>
-                  </label>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -282,14 +408,29 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                   <label className="text-xs font-bold text-foreground/80 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-rose-400" />
                     Incident Geolocation Anchor
+                    {exifGpsNote?.startsWith("📡") && (
+                      <span className="ml-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        GPS from Photo
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="Address or coordinates of violation"
-                    className="w-full bg-background border border-border-subtle rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-purple-500"
+                    className={`w-full bg-background border rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-purple-500 transition-colors ${
+                      exifGpsNote?.startsWith("📡")
+                        ? "border-emerald-500/40 text-emerald-400 font-mono"
+                        : "border-border-subtle"
+                    }`}
                   />
+                  {(latitude !== 37.7792 || longitude !== -122.4185) && (
+                    <p className="text-[10px] font-mono text-foreground/40 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      Lat: {latitude.toFixed(5)} &nbsp; Lng: {longitude.toFixed(5)}
+                    </p>
+                  )}
                 </div>
 
                 <button
