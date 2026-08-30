@@ -27,6 +27,7 @@ import {
   type ComplaintRecord,
 } from "../lib/complaintData";
 import ComplaintMap from "./ComplaintMap";
+import { verifyCivicDefect } from "../lib/aiVerification";
 
 // ─── Re-export payload type ───────────────────────────────────────────────────
 export type { ComplaintRecord };
@@ -254,6 +255,16 @@ export default function TrafficReportForm({
     }
 
     setIsSubmitting(true);
+
+    if (imageFile) {
+      const verificationResult = await verifyCivicDefect(imageFile);
+      if (!verificationResult.valid) {
+        setValidationError(verificationResult.reason || "Image verification failed.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const refId = `CIV-${Math.floor(100000 + Math.random() * 900000)}`;
     
     let finalImageUrl = imageBase64;
@@ -330,9 +341,10 @@ export default function TrafficReportForm({
             Your <strong className={currentCfg.markerText}>{category}</strong> complaint has been filed with the relevant authority.
           </p>
         </div>
-        <div className={`px-5 py-3 rounded-xl ${currentCfg.markerBg} border ${currentCfg.markerBorder} font-mono ${currentCfg.markerText} text-sm font-bold tracking-widest`}>
-          ✓ Complaint submitted successfully! Tracking ID: #{submitSuccess}
+        <div className={`px-5 py-3 rounded-xl ${currentCfg.markerBg} border ${currentCfg.markerBorder} font-mono ${currentCfg.markerText} text-sm font-bold tracking-widest text-center`}>
+          ✓ Your complaint has been successfully reported! Tracking ID: #{submitSuccess}
         </div>
+        <p className="text-sm font-medium text-foreground text-center mt-2">A real-time status update has been sent to your registered email address (citizen@example.com).</p>
         <p className="text-xs text-foreground/40">This window closes in 5 seconds…</p>
         <button onClick={onClose} className="text-xs text-foreground/60 hover:text-foreground underline transition">
           Close now
