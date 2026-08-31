@@ -33,7 +33,8 @@ export type IssueStatus =
   | 'in_progress'
   | 'resolved'
   | 'verified'
-  | 'escalated';
+  | 'escalated'
+  | 'duplicate_resolved';
 
 export type Severity = 'Critical' | 'High' | 'Medium' | 'Low';
 
@@ -139,6 +140,11 @@ export interface CivicIssue {
 
   // Audit history
   history: IssueHistoryItem[];
+
+  // Deduplication
+  masterIssueId?: string;
+  duplicateIds?: string[];
+  mergedReporterEmails?: string[];
 
   createdAt: string;
   updatedAt: string;

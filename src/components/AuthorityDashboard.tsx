@@ -15,6 +15,8 @@ import {
 import type { CivicIssue, User, Language, IssueStatus } from "../types";
 import { VoiceField } from "./VoiceControls";
 import { api } from "../lib/api";
+import { deduplicateComplaints } from "../lib/deduplication";
+import { Network, Sparkles, Loader2 } from "lucide-react";
 
 interface AuthorityDashboardProps {
   issues: CivicIssue[];
@@ -50,6 +52,9 @@ export default function AuthorityDashboard({
   const [allocation, setAllocation] = useState<Awaited<ReturnType<typeof api.allocateBudget>>["allocation"] | null>(null);
   const [isAllocating, setIsAllocating] = useState(false);
   const [localComplaints, setLocalComplaints] = useState<CivicIssue[]>([]);
+  const [isDeduplicating, setIsDeduplicating] = useState(false);
+  const [dedupedMode, setDedupedMode] = useState(false);
+  const [dedupedIssues, setDedupedIssues] = useState<CivicIssue[]>([]);
 
   useEffect(() => {
     const loadLocal = () => {
@@ -122,8 +127,20 @@ export default function AuthorityDashboard({
   const uniqueIssues = Array.from(new Map(combinedIssues.map(item => [item.id, item])).values());
   const safeIssues = uniqueIssues;
 
+  const handleDeduplicate = async () => {
+    setIsDeduplicating(true);
+    await new Promise((res) => setTimeout(res, 800)); // Simulate AI processing
+    const merged = deduplicateComplaints(safeIssues);
+    setDedupedIssues(merged);
+    setDedupedMode(true);
+    setIsDeduplicating(false);
+  };
+
+  const displayIssues = dedupedMode ? dedupedIssues : safeIssues;
+
   // Filter & Sort Logic
-  const filteredIssues = safeIssues
+  const filteredIssues = displayIssues
+    .filter((issue) => issue.status !== "duplicate_resolved")
     .filter((issue) => {
       const matchesSearch =
         issue?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -245,6 +262,23 @@ export default function AuthorityDashboard({
               <option value="upvotes">Upvotes</option>
             </select>
           </div>
+
+          <button
+            onClick={handleDeduplicate}
+            disabled={isDeduplicating}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              dedupedMode
+                ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                : "bg-surface border border-border-subtle text-foreground/80 hover:text-foreground hover:border-indigo-500/50 hover:bg-indigo-500/10"
+            }`}
+          >
+            {isDeduplicating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            )}
+            {dedupedMode ? "AI Deduplication Active" : "Merge Duplicates using AI"}
+          </button>
         </div>
       </div>
 
@@ -325,6 +359,12 @@ export default function AuthorityDashboard({
                         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
                           <MapPin className="w-3 h-3 text-ashoka-navy dark:text-ashoka-navy" />
                           {issue.locationAddress}
+                        </div>
+                      )}
+                      {issue.duplicateIds && issue.duplicateIds.length > 0 && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-[10px] font-bold rounded-md">
+                          <Network className="w-3 h-3" />
+                          Merged Duplicate ({(issue.reportCount || 1)} Citizen Reports Combined)
                         </div>
                       )}
                     </div>
