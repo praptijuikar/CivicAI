@@ -113,8 +113,21 @@ function statusBadge(status: ComplaintRecord["status"]) {
 }
 
 function complaintPopupHtml(r: ComplaintRecord): string {
-  const cfg = COMPLAINT_CATEGORY_CONFIG[r.category];
-  const sev = SEVERITY_CONFIG[r.severity];
+  const cfg = COMPLAINT_CATEGORY_CONFIG[r.category] || {
+    label: r.category || "Unknown",
+    emoji: "📌",
+    markerBg: "bg-slate-500/10",
+    markerBorder: "border-slate-500/30",
+    markerText: "text-slate-400",
+    markerColor: "#64748b",
+    subTypes: ["General"],
+  };
+  const sev = SEVERITY_CONFIG[r.severity] || {
+    bg: "bg-slate-500/10",
+    color: "text-slate-400",
+    border: "border-slate-500/30",
+    dot: "bg-slate-400",
+  };
   const date = new Date(r.incidentAt).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -276,8 +289,8 @@ export default function ComplaintMap({
     );
 
     visible.forEach((r) => {
-      const cfg = COMPLAINT_CATEGORY_CONFIG[r.category];
-      const icon = makeDivIcon(cfg.markerColor, SVG_PATHS[r.category], r.subType);
+      const cfg = COMPLAINT_CATEGORY_CONFIG[r.category] || { markerColor: "#64748b" };
+      const icon = makeDivIcon(cfg.markerColor, SVG_PATHS[r.category] || SVG_PATHS["Traffic Jam"], r.subType);
       const marker = L.marker([r.latitude, r.longitude], { icon });
       marker.bindPopup(complaintPopupHtml(r));
       layer.addLayer(marker);
