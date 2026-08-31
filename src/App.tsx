@@ -20,6 +20,7 @@ import AdminLogin from "./components/AdminLogin.tsx";
 import CommandPalette from "./components/CommandPalette.tsx";
 import LoginPage from "./components/LoginPage.tsx";
 import RegisterPage from "./components/RegisterPage.tsx";
+import EmergencySOS from "./components/EmergencySOS.tsx";
 
 const DEFAULT_MOCK_USER: User = {
   id: "usr-citizen-01",
@@ -228,6 +229,9 @@ export default function App() {
         language={language}
         onLanguageChange={setLanguage}
       />
+      
+      {/* 🚨 Emergency SOS — always visible, zero-depth access */}
+      <EmergencySOS />
     </div>
   );
 }
