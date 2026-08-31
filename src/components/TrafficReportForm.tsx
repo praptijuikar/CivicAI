@@ -265,8 +265,8 @@ export default function TrafficReportForm({
         return;
       }
     }
-
-    const refId = `ISS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const prefix = category === "Food & Health Safety" ? "FHD" : "ISS";
+    const refId = `${prefix}-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     
     let finalImageUrl = imageBase64;
     if (finalImageUrl) {

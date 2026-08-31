@@ -166,7 +166,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
     setIsSubmitting(true);
 
     try {
-      const refId = `ISS-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+      const refId = `INT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const localRecord = {
         id: refId,
@@ -542,6 +542,7 @@ export default function IntegrityPortal({ currentUser }: IntegrityPortalProps) {
                 trackingId={createdTrackingCode || ""}
                 category={category}
                 locationName={address || "Confidential Location"}
+                departmentInvolved={departmentInvolved}
                 onTrackComplaint={() => { window.location.href = '/dashboard'; }}
                 onReportAnother={() => {
                   setGeneratedHash(null);
