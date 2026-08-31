@@ -10,6 +10,9 @@ import {
   AlertTriangle,
   ChevronRight,
   Lock,
+  Wifi,
+  Brain,
+  Flame,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -25,7 +28,7 @@ interface EmergencyNumber {
 }
 
 interface EmergencyCategory {
-  id: "police" | "medical" | "assault" | "ragging";
+  id: "police" | "medical" | "assault" | "ragging" | "cyber" | "mental";
   titleKey: string;
   descKey: string;
   icon: typeof Shield;
@@ -52,7 +55,9 @@ const EMERGENCY_CATEGORIES: EmergencyCategory[] = [
       { label: "100", number: "100", tel: "tel:100" },
       { label: "911", number: "911", tel: "tel:911" },
     ],
-    secondaryNumbers: [],
+    secondaryNumbers: [
+      { label: "🔥 101", number: "101", tel: "tel:101" },
+    ],
     safetyStepKeys: ["activeDangerStep1", "activeDangerStep2"],
   },
   {
@@ -68,7 +73,10 @@ const EMERGENCY_CATEGORIES: EmergencyCategory[] = [
       { label: "108", number: "108", tel: "tel:108" },
       { label: "911", number: "911", tel: "tel:911" },
     ],
-    secondaryNumbers: [],
+    secondaryNumbers: [
+      { label: "🛣️ 1033", number: "1033", tel: "tel:1033" },
+      { label: "🚂 139", number: "139", tel: "tel:139" },
+    ],
     safetyStepKeys: ["medicalStep1", "medicalStep2"],
   },
   {
@@ -81,10 +89,11 @@ const EMERGENCY_CATEGORIES: EmergencyCategory[] = [
     accentColor: "#A855F7",
     primaryNumbers: [
       { label: "1091", number: "1091", tel: "tel:1091" },
+      { label: "181", number: "181", tel: "tel:181" },
     ],
     secondaryNumbers: [
+      { label: "NCW 14490", number: "14490", tel: "tel:14490" },
       { label: "112", number: "112", tel: "tel:112" },
-      { label: "100", number: "100", tel: "tel:100" },
     ],
     safetyStepKeys: ["assaultStep1", "assaultStep2", "assaultStep3"],
     affirmationKey: "safeNow",
@@ -105,10 +114,49 @@ const EMERGENCY_CATEGORIES: EmergencyCategory[] = [
       },
     ],
     secondaryNumbers: [
+      { label: "👶 1098", number: "1098", tel: "tel:1098" },
       { label: "112", number: "112", tel: "tel:112" },
     ],
     safetyStepKeys: ["raggingStep1", "raggingStep2"],
     affirmationKey: "notAlone",
+  },
+  {
+    id: "cyber",
+    titleKey: "cyberTitle",
+    descKey: "cyberDesc",
+    icon: Wifi,
+    cardClass: "sos-card sos-card-cyber",
+    btnClass: "sos-call-btn sos-call-btn-cyber",
+    accentColor: "#F59E0B",
+    primaryNumbers: [
+      { label: "1930", number: "1930", tel: "tel:1930" },
+    ],
+    secondaryNumbers: [
+      { label: "112", number: "112", tel: "tel:112" },
+    ],
+    safetyStepKeys: ["cyberStep1", "cyberStep2"],
+    affirmationKey: "cyberAffirm",
+  },
+  {
+    id: "mental",
+    titleKey: "mentalTitle",
+    descKey: "mentalDesc",
+    icon: Brain,
+    cardClass: "sos-card sos-card-mental",
+    btnClass: "sos-call-btn sos-call-btn-mental",
+    accentColor: "#14B8A6",
+    primaryNumbers: [
+      {
+        label: "1800-599-0019",
+        number: "1800-599-0019",
+        tel: "tel:18005990019",
+      },
+    ],
+    secondaryNumbers: [
+      { label: "👴 14567", number: "14567", tel: "tel:14567" },
+    ],
+    safetyStepKeys: ["mentalStep1", "mentalStep2"],
+    affirmationKey: "mentalAffirm",
   },
 ];
 

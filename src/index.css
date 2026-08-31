@@ -393,3 +393,33 @@ select option {
   box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
 }
 
+/* Cyber Crime / Online Harassment */
+.sos-card-cyber {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.sos-card-cyber:hover {
+  border-color: rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 24px rgba(245, 158, 11, 0.2), 0 8px 32px rgba(245, 158, 11, 0.1);
+}
+
+.sos-call-btn-cyber {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+}
+
+/* Mental Health / Crisis Support */
+.sos-card-mental {
+  border-color: rgba(20, 184, 166, 0.25);
+}
+.sos-card-mental:hover {
+  border-color: rgba(20, 184, 166, 0.6);
+  box-shadow: 0 0 24px rgba(20, 184, 166, 0.2), 0 8px 32px rgba(20, 184, 166, 0.1);
+}
+
+.sos-call-btn-mental {
+  background: linear-gradient(135deg, #14B8A6, #0D9488);
+  color: white;
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.4);
+}
+
