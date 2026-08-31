@@ -24,22 +24,24 @@ export default function SubmissionSuccessModal({
   let iconBg = "bg-emerald-500/10";
   let trackingBg = "bg-emerald-500/10 border-emerald-500/20 text-emerald-500";
   
-  if (trackingId.startsWith("INT-") || departmentInvolved) {
+  if (category === "Integrity & Whistleblowing") {
     mainCategory = "Integrity & Whistleblowing";
     Icon = Shield;
     iconColor = "text-purple-500";
     iconBg = "bg-purple-500/10";
     trackingBg = "bg-purple-500/10 border-purple-500/20 text-purple-500";
-  } else if (trackingId.startsWith("FHD-") || category === "Food & Health Safety") {
+  } else if (category === "Food & Health Standards") {
     mainCategory = "Food & Health Standards";
     Icon = Utensils;
     iconColor = "text-amber-500";
     iconBg = "bg-amber-500/10";
     trackingBg = "bg-amber-500/10 border-amber-500/20 text-amber-500";
+  } else {
+    mainCategory = "Department & Service Issues";
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-surface border border-border-subtle rounded-3xl p-8 w-full max-w-md shadow-2xl flex flex-col items-center text-center space-y-6">
         <div className={`w-16 h-16 rounded-full ${iconBg} flex items-center justify-center animate-bounce`}>
           <Icon className={`w-8 h-8 ${iconColor}`} />
@@ -70,16 +72,16 @@ export default function SubmissionSuccessModal({
                   Establishment/Location: <span className="text-foreground font-medium">{locationName}</span>
                 </p>
               </>
-            ) : (
+            ) : mainCategory === "Department & Service Issues" ? (
               <>
                 <p className="text-foreground/60 text-sm">
-                  Category: <span className="text-foreground font-medium">{category}</span>
+                  Category: <span className="text-foreground font-medium">Department & Service Issues</span>
                 </p>
                 <p className="text-foreground/60 text-sm mt-1">
                   Location: <span className="text-foreground font-medium">{locationName}</span>
                 </p>
               </>
-            )}
+            ) : null}
           </div>
         </div>
 

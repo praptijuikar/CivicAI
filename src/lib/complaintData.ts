@@ -2,7 +2,7 @@
 // Single source of truth shared by TrafficReportForm and ComplaintMap.
 
 export type ComplaintCategory =
-  | "Food & Health Safety"
+  | "Food & Health Standards"
   | "Traffic Jam"
   | "Illegal Parking";
 
@@ -58,8 +58,8 @@ export const COMPLAINT_CATEGORY_CONFIG: Record<
     refPrefix: string;
   }
 > = {
-  "Food & Health Safety": {
-    label: "Food & Health Safety",
+  "Food & Health Standards": {
+    label: "Food & Health Standards",
     emoji: "🟢",
     markerColor: "#22c55e",
     markerBg: "bg-emerald-500/10",

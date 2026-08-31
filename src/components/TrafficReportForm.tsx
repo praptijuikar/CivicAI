@@ -86,9 +86,9 @@ function extractExifGPS(file: File): Promise<{ lat: number; lng: number } | null
 // ─── Category icon map ────────────────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<ComplaintCategory, React.ReactNode> = {
-  "Food & Health Safety": <Utensils className="w-4 h-4" />,
-  "Traffic Jam":          <Car className="w-4 h-4" />,
-  "Illegal Parking":      <ParkingCircle className="w-4 h-4" />,
+  "Food & Health Standards": <Utensils className="w-4 h-4" />,
+  "Traffic Jam": <Car className="w-4 h-4" />,
+  "Illegal Parking": <ParkingCircle className="w-4 h-4" />,
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ interface TrafficReportFormProps {
   onClose: () => void;
   /** Called when a complaint is successfully submitted */
   onComplaintSubmitted?: (record: ComplaintRecord) => void;
-  initialCategory?: "Food & Health Safety" | "Traffic Jam" | "Illegal Parking";
+  initialCategory?: "Food & Health Standards" | "Traffic Jam" | "Illegal Parking";
 }
 
 // local-only store so the map in the modal reflects already-submitted complaints
@@ -109,7 +109,7 @@ export default function TrafficReportForm({
   initialCategory = "Traffic Jam",
 }: TrafficReportFormProps) {
   // ── Category & sub-type ─────────────────────────────────────────────────
-  const [category, setCategory] = useState<"Food & Health Safety" | "Traffic Jam" | "Illegal Parking">(initialCategory);
+  const [category, setCategory] = useState<"Food & Health Standards" | "Traffic Jam" | "Illegal Parking">(initialCategory);
   const cfg = COMPLAINT_CATEGORY_CONFIG[category];
   const [subType, setSubType] = useState<ComplaintSubType>(cfg.subTypes[0]);
 
@@ -265,9 +265,9 @@ export default function TrafficReportForm({
         return;
       }
     }
-    const prefix = category === "Food & Health Safety" ? "FHD" : "ISS";
+    const prefix = category === "Food & Health Standards" ? "FHD" : "ISS";
     const refId = `${prefix}-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    
+
     let finalImageUrl = imageBase64;
     if (finalImageUrl) {
       finalImageUrl = await compressImage(finalImageUrl);
@@ -308,14 +308,14 @@ export default function TrafficReportForm({
     } finally {
       setIsSubmitting(false);
       SESSION_RECORDS.push(record);
-      
+
       try {
         const stored = JSON.parse(localStorage.getItem("civic_complaints") || "[]");
         stored.push(localRecord);
         localStorage.setItem("civic_complaints", JSON.stringify(stored));
         window.dispatchEvent(new CustomEvent("new_complaint_added"));
         window.dispatchEvent(new Event("storage"));
-      } catch (e) {}
+      } catch (e) { }
 
       onComplaintSubmitted?.(record);
       setSubmitSuccess(refId);
@@ -361,11 +361,10 @@ export default function TrafficReportForm({
                 key={cat}
                 type="button"
                 onClick={() => setCategory(cat)}
-                className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center text-[11px] font-semibold transition-all duration-150 ${
-                  active
+                className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border text-center text-[11px] font-semibold transition-all duration-150 ${active
                     ? `${catCfg.markerBg} ${catCfg.markerBorder} ${catCfg.markerText} shadow-md`
                     : "bg-background border-border-subtle text-foreground/50 hover:border-foreground/20 hover:text-foreground/80"
-                }`}
+                  }`}
               >
                 <span className="text-lg">{catCfg.emoji}</span>
                 <span className={active ? catCfg.markerText : "text-foreground/40"}>
@@ -409,11 +408,11 @@ export default function TrafficReportForm({
           value={establishmentName}
           onChange={(e) => setEstablishmentName(e.target.value)}
           placeholder={
-            category === "Food & Health Safety"
+            category === "Food & Health Standards"
               ? "e.g. City Hospital Ward 4, Dragon Palace Restaurant, Primary Health Center…"
               : category === "Traffic Jam"
-              ? "e.g. Market St & 5th Ave Intersection…"
-              : "e.g. City Hall Parking Zone B…"
+                ? "e.g. Market St & 5th Ave Intersection…"
+                : "e.g. City Hall Parking Zone B…"
           }
           className="w-full bg-background border border-border-subtle rounded-xl px-4 py-2.5 text-xs text-foreground focus:outline-none focus:border-[#00F2FE]/60 transition-colors placeholder:text-foreground/30"
         />
@@ -433,11 +432,10 @@ export default function TrafficReportForm({
                 key={sev}
                 type="button"
                 onClick={() => setSeverity(sev)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-[11px] font-bold transition-all ${
-                  active
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-[11px] font-bold transition-all ${active
                     ? `${sc.bg} ${sc.border} ${sc.color} shadow-sm`
                     : "bg-background border-border-subtle text-foreground/40 hover:text-foreground/70 hover:border-foreground/20"
-                }`}
+                  }`}
               >
                 <span className={`w-2 h-2 rounded-full ${active ? sc.dot : "bg-foreground/20"}`} />
                 {sev}
@@ -513,11 +511,10 @@ export default function TrafficReportForm({
           className="hidden" onChange={handleFileChange} />
 
         {exifNote && (
-          <p className={`text-[11px] font-medium px-3 py-2 rounded-lg border ${
-            exifNote.startsWith("📡")
+          <p className={`text-[11px] font-medium px-3 py-2 rounded-lg border ${exifNote.startsWith("📡")
               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
               : "bg-amber-500/10 border-amber-500/30 text-amber-400"
-          }`}>
+            }`}>
             {exifNote}
           </p>
         )}
@@ -599,13 +596,12 @@ export default function TrafficReportForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`flex-1 py-2.5 rounded-xl text-white text-xs font-bold shadow-lg hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r ${
-            category === "Food & Health Safety"
+          className={`flex-1 py-2.5 rounded-xl text-white text-xs font-bold shadow-lg hover:brightness-110 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r ${category === "Food & Health Standards"
               ? "from-emerald-500 to-green-600 shadow-emerald-500/20"
               : category === "Traffic Jam"
-              ? "from-red-500 to-rose-600 shadow-red-500/20"
-              : "from-orange-500 to-amber-500 shadow-orange-500/20"
-          }`}
+                ? "from-red-500 to-rose-600 shadow-red-500/20"
+                : "from-orange-500 to-amber-500 shadow-orange-500/20"
+            }`}
         >
           {isSubmitting ? (
             <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting…</>

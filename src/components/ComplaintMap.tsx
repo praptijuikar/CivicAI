@@ -72,7 +72,7 @@ function makeDivIcon(color: string, svgPath: string, label: string) {
 }
 
 const SVG_PATHS: Record<ComplaintCategory, string> = {
-  "Food & Health Safety":
+  "Food & Health Standards":
     '<path d="M9 4h6M9 20h6M12 4v16M5 9c0-2.2 3.1-4 7-4s7 1.8 7 4"/><path d="M5 15c0 2.2 3.1 4 7 4s7-1.8 7-4"/>',
   "Traffic Jam":
     '<rect width="18" height="11" x="3" y="8" rx="2"/><path d="M7 8V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><circle cx="7" cy="14" r="1"/><circle cx="17" cy="14" r="1"/>',

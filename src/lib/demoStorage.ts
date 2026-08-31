@@ -94,7 +94,7 @@ const COMPLAINTS_KEY = "civicai-demo-complaints";
 export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   {
     id: "FHS-10001",
-    category: "Food & Health Safety",
+    category: "Food & Health Standards",
     subType: "Unhygienic Conditions",
     establishmentName: "Dragon Palace Restaurant",
     description: "Kitchen area visible from entrance with open drain and flies. Staff not wearing gloves.",
@@ -108,7 +108,7 @@ export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   },
   {
     id: "FHS-10002",
-    category: "Food & Health Safety",
+    category: "Food & Health Standards",
     subType: "Food Poisoning / Expired Food",
     establishmentName: "QuickBite Deli",
     description: "Multiple customers reported food poisoning after consuming sandwiches on 28 Aug. Expiry dates not visible.",
@@ -122,7 +122,7 @@ export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   },
   {
     id: "FHS-10003",
-    category: "Food & Health Safety",
+    category: "Food & Health Standards",
     subType: "Unhygienic Conditions",
     establishmentName: "Street Cart – Corner of Oak & 3rd",
     description: "Unlicensed mobile cart selling raw seafood without refrigeration. No health permit displayed.",
@@ -136,7 +136,7 @@ export const MOCK_COMPLAINTS: ComplaintRecord[] = [
   },
   {
     id: "FHS-10004",
-    category: "Food & Health Safety",
+    category: "Food & Health Standards",
     subType: "Unhygienic Conditions",
     establishmentName: "Sunrise Bakery",
     description: "Rodent droppings found near bread display shelves. Pest sighting reported by two separate customers.",

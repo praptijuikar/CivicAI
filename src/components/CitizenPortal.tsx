@@ -136,7 +136,7 @@ export default function CitizenPortal({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"home" | "report" | "my-reports" | "feed">("home");
   const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
-  const [complaintFormCategory, setComplaintFormCategory] = useState<"Traffic Jam" | "Food & Health Safety" | "Illegal Parking">("Traffic Jam");
+  const [complaintFormCategory, setComplaintFormCategory] = useState<"Traffic Jam" | "Food & Health Standards" | "Illegal Parking">("Traffic Jam");
   const [complaintRecords, setComplaintRecords] = useState<ComplaintRecord[]>(() => loadDemoComplaints());
 
   // Reporting Form State
@@ -801,7 +801,6 @@ export default function CitizenPortal({
                       onComplaintSubmitted={(record) => {
                         setComplaintRecords(prev => [record, ...prev]);
                         saveDemoComplaint(record);
-                        setIsTrafficModalOpen(false);
                       }}
                     />
                   </div>
