@@ -80,9 +80,9 @@ export function deduplicateComplaints(complaints: CivicIssue[]): CivicIssue[] {
       // Check 1: Same category
       if (issue.category !== candidate.category) continue;
       
-      // Check 2: Distance within 100 meters
+      // Check 2: Distance within 50 meters
       const distance = calculateHaversineDistance(issue.latitude, issue.longitude, candidate.latitude, candidate.longitude);
-      if (distance > 100) continue;
+      if (distance > 50) continue;
       
       // Check 3: Text similarity (Title + Description) > 80% (0.8)
       const text1 = `${issue.title} ${issue.description}`;
