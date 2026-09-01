@@ -299,10 +299,9 @@ export default function AuthorityDashboard({
         </div>}
       </section>
 
-      {/* Issues Table */}
-      <div className="bg-surface border border-border-subtle rounded-2xl overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-foreground/80">
+      {/* Wrap your table component in an overflow wrapper */}
+      <div className="w-full overflow-x-auto rounded-xl border border-slate-800 shadow-lg bg-surface">
+        <table className="w-full text-left text-sm min-w-[700px]">
             <thead className="bg-background text-foreground/60 uppercase text-[10px] tracking-wider border-b border-border-subtle">
               <tr>
                 <th className="p-4">Report ID</th>
@@ -378,8 +377,7 @@ export default function AuthorityDashboard({
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+        </table>
       </div>
 
       {/* Action Modal */}
