@@ -247,3 +247,147 @@ export interface AnalyticsOverview {
     urgencyLevel: 'Critical' | 'High' | 'Medium';
   }[];
 }
+
+// ============================================================================
+// ONLINE THREAT & CYBER HARASSMENT MODULE TYPES
+// ============================================================================
+
+export type ThreatCategory =
+  | 'DOXXING'
+  | 'CYBERSTALKING'
+  | 'EXPLICIT_THREATS'
+  | 'EXTORTION_SEXTORTION'
+  | 'IMPERSONATION'
+  | 'NON_CONSENSUAL_IMAGERY'
+  | 'TARGETED_HARASSMENT'
+  | 'OTHER';
+
+export type ThreatPlatform =
+  | 'TWITTER_X'
+  | 'WHATSAPP'
+  | 'INSTAGRAM'
+  | 'TELEGRAM'
+  | 'DARK_WEB'
+  | 'DISCORD'
+  | 'REDDIT'
+  | 'FACEBOOK'
+  | 'OTHER';
+
+export type ThreatStatus =
+  | 'SUBMITTED'
+  | 'AI_EVALUATED'
+  | 'UNDER_INVESTIGATION'
+  | 'ESCALATED_TO_CYBER_CELL'
+  | 'ACTION_TAKEN'
+  | 'RESOLVED'
+  | 'CLOSED';
+
+export interface ThreatEvidenceFile {
+  id?: string;
+  fileName: string;
+  fileHash: string; // SHA-256 hash
+  mimeType: string;
+  fileSize?: number;
+  fileSizeFormatted?: string;
+  previewUrl?: string;
+  fileData?: string; // Base64 data if uploaded
+  extractedText?: string; // OCR extracted text from this specific file
+  ocrConfidence?: number;
+}
+
+export interface LegalStatute {
+  section: string;
+  act: string;
+  title: string;
+  description: string;
+  punishment: string;
+  cognizable: boolean;
+  bailable: boolean;
+  relevanceReason: string;
+}
+
+export interface ComplainantContact {
+  name: string;
+  email: string;
+  phone: string;
+  preferredContact?: 'EMAIL' | 'PHONE' | 'SECURE_IN_APP' | 'DO_NOT_CONTACT';
+  safeCallbackHours?: string;
+}
+
+export interface ThreatIncidentMeta {
+  platform: ThreatPlatform | string;
+  suspectHandle?: string;
+  suspectProfileUrl?: string;
+  suspectContactInfo?: string;
+  incidentTimestamp: string;
+  narrative: string;
+  repeatOffender?: boolean;
+  priorComplaintsFiled?: boolean;
+}
+
+export interface ThreatAIAnalysis {
+  severityScore: number; // 0.0 to 1.0
+  urgencyLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  threatIntent: string;
+  riskFactors: string[];
+  extractedKeywords: string[];
+  immediateSafetyActions: string[];
+  lawEnforcementRecommendation: string;
+  confidenceScore: number;
+  summary: string;
+}
+
+export interface LegalComplaintDossier {
+  dossierId: string;
+  generatedAt: string;
+  jurisdiction: string;
+  statutorySummary: string;
+  victimStatement: string;
+  accusedParticulars: {
+    handle: string;
+    profileUrl: string;
+    platform: string;
+    additionalIdentifiers: string;
+  };
+  evidenceRegistry: {
+    fileName: string;
+    sha256Hash: string;
+    mimeType: string;
+    ocrSummary?: string;
+  }[];
+  applicableLaws: LegalStatute[];
+  recommendedFIRSections: string[];
+  investigatingOfficerChecklist: string[];
+  preservationNoticeNoticeText: string;
+  chainOfCustodyProof: string;
+}
+
+export interface CyberThreatReport {
+  id: string;
+  ticketId: string; // e.g. "CYBER-2026-89412"
+  isAnonymous: boolean;
+  complainantContact?: ComplainantContact;
+  threatCategory: ThreatCategory;
+  incidentMeta: ThreatIncidentMeta;
+  evidenceFiles: ThreatEvidenceFile[];
+  severityScore: number; // 0.0 to 1.0
+  urgencyLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  legalSectionsFlagged: LegalStatute[];
+  hashDigest: string; // Master SHA-256 digest
+  extractedText?: string;
+  aiAnalysis?: ThreatAIAnalysis;
+  legalDossier?: LegalComplaintDossier;
+  status: ThreatStatus;
+  statusNotes?: string;
+  assignedInvestigator?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ThreatSubmissionPayload {
+  isAnonymous: boolean;
+  complainantContact?: ComplainantContact;
+  threatCategory: ThreatCategory | string;
+  incidentMeta: ThreatIncidentMeta;
+  evidenceFiles: ThreatEvidenceFile[];
+}

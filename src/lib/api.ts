@@ -1,6 +1,8 @@
 import type {
   CivicIssue,
   IntegrityReport,
+  CyberThreatReport,
+  ThreatSubmissionPayload,
   AnalyticsOverview,
   User,
   DepartmentStats,
@@ -286,6 +288,45 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
+  // --- Cyber Threat & Online Harassment ---
+  getThreatReports: (filters?: {
+    category?: string;
+    status?: string;
+    search?: string;
+  }): Promise<{ reports: CyberThreatReport[]; count: number }> =>
+    httpClient(`/api/v1/threats${buildQueryString(filters)}`),
+
+  getThreatReportByTicketId: (ticketId: string): Promise<{ report: CyberThreatReport }> =>
+    httpClient(`/api/v1/threats/${encodeURIComponent(ticketId)}`),
+
+  submitThreatReport: (
+    payload: ThreatSubmissionPayload
+  ): Promise<{
+    ticketId: string;
+    severityScore: number;
+    urgencyLevel: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    legalSectionsFlagged: any[];
+    hashDigest: string;
+    extractedText?: string;
+    aiAnalysis?: any;
+    legalDossier?: any;
+    report: CyberThreatReport;
+    message: string;
+  }> =>
+    httpClient("/api/v1/threats/submit", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  updateThreatStatus: (
+    ticketId: string,
+    payload: { status: string; statusNotes?: string; assignedInvestigator?: string }
+  ): Promise<{ report: CyberThreatReport; message: string }> =>
+    httpClient(`/api/v1/threats/${encodeURIComponent(ticketId)}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
   // --- Analytics & Resources ---
   getAnalytics: (): Promise<{ analytics: AnalyticsOverview }> =>
     httpClient("/api/v1/analytics/overview"),
@@ -382,4 +423,25 @@ export async function analyzeImage(imageBase64: string, mimeType: string = "imag
     body: JSON.stringify({ imageBase64, mimeType }),
   });
   return safeParseResponse(response);
-}
+}
+
+export async function submitCyberThreatReport(payload: ThreatSubmissionPayload) {
+  const response = await fetch(`${API_BASE}/threats/submit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(payload),
+  });
+  return safeParseResponse(response);
+}
+
+export async function fetchCyberThreatReports(params?: { category?: string; status?: string; search?: string }) {
+  const query = new URLSearchParams(params as any).toString();
+  const response = await fetch(`${API_BASE}/threats${query ? `?${query}` : ""}`, {
+    headers: getAuthHeader(),
+  });
+  return safeParseResponse(response);
+}
+

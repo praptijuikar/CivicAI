@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Shield,
+  ShieldAlert,
   ThumbsUp,
   ArrowRight,
   RefreshCw,
@@ -116,6 +117,7 @@ interface CitizenPortalProps {
   currentUser: User;
   language: Language;
   onOpenIntegrity: () => void;
+  onOpenThreats?: () => void;
   onSelectIssue: (issue: CivicIssue) => void;
   issues: CivicIssue[];
   onRefreshIssues: () => void;
@@ -127,6 +129,7 @@ export default function CitizenPortal({
   currentUser,
   language,
   onOpenIntegrity,
+  onOpenThreats,
   onSelectIssue,
   issues,
   onRefreshIssues,
@@ -678,6 +681,40 @@ export default function CitizenPortal({
                 <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-[#6366F1] font-bold">
                   <span>Zero-Knowledge • Vetted Audit</span>
                   <span>Open Vault &rarr;</span>
+                </div>
+              </TiltBentoCard>
+
+              {/* Bento Card 4: Cyber Threat & Harassment Shield */}
+              <TiltBentoCard
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } }
+                }}
+                onClick={onOpenThreats || onOpenIntegrity}
+                className="md:col-span-1 glass-panel p-6 rounded-2xl cursor-pointer group relative overflow-hidden min-h-[220px] border-cyan-500/20"
+                glowColor="hover:border-cyan-500/40 hover:shadow-cyan-500/10"
+              >
+                <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl transition-opacity duration-300 group-hover:opacity-100" />
+                <div style={{ transform: "translateZ(10px)" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition">
+                      <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-mono">
+                      AI + 1930 Cyber Cell
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-foreground mt-4 flex items-center gap-1.5">
+                    Cyber Threat & Harassment Shield
+                    <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition" />
+                  </h3>
+                  <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
+                    Report online threats, extortion, cyberstalking, and doxxing. Extract OCR evidence, compute AI severity, and generate legal FIR complaint dossiers.
+                  </p>
+                </div>
+                <div style={{ transform: "translateZ(5px)" }} className="mt-4 pt-4 border-t border-border-subtle flex items-center justify-between text-[10px] text-cyan-400 font-bold">
+                  <span>SHA-256 Vault • IT Act Mapping</span>
+                  <span>Report Threat &rarr;</span>
                 </div>
               </TiltBentoCard>
             </div>

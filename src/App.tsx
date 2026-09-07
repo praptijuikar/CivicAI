@@ -21,6 +21,7 @@ import CommandPalette from "./components/CommandPalette.tsx";
 import LoginPage from "./components/LoginPage.tsx";
 import RegisterPage from "./components/RegisterPage.tsx";
 import EmergencySOS from "./components/EmergencySOS.tsx";
+import CyberThreatPortal from "./components/CyberThreatPortal.tsx";
 
 const DEFAULT_MOCK_USER: User = {
   id: "usr-citizen-01",
@@ -123,13 +124,15 @@ export default function App() {
   // Derived state for Header
   const activePortalTab = location.pathname.includes("/admin/dashboard")
     ? "authority"
-    : location.pathname.includes("/integrity")
-      ? "integrity"
-      : location.pathname.includes("/field-officer")
-        ? "officer"
-        : location.pathname.includes("/analytics")
-          ? "analytics"
-          : "citizen";
+    : location.pathname.includes("/threats") || location.pathname.includes("/cyber-threats")
+      ? "threats"
+      : location.pathname.includes("/integrity")
+        ? "integrity"
+        : location.pathname.includes("/field-officer")
+          ? "officer"
+          : location.pathname.includes("/analytics")
+            ? "analytics"
+            : "citizen";
 
   return (
     <div key={language} className="min-h-screen bg-slate-50 dark:bg-[#0B0F19] text-slate-900 dark:text-slate-50 flex flex-col relative transition-colors duration-300">
@@ -140,6 +143,7 @@ export default function App() {
             activePortalTab={activePortalTab as any}
             onPortalTabChange={(tab) => {
                if (tab === "authority") navigate("/admin/dashboard");
+               else if (tab === "threats") navigate("/threats");
                else if (tab === "integrity") navigate("/integrity");
                else if (tab === "officer") navigate("/field-officer");
                else if (tab === "analytics") navigate("/analytics");
@@ -168,6 +172,7 @@ export default function App() {
               currentUser={currentUser || DEFAULT_MOCK_USER}
               language={language}
               onOpenIntegrity={() => navigate("/integrity")}
+              onOpenThreats={() => navigate("/threats")}
               onSelectIssue={setSelectedIssue}
               issues={issues}
               onRefreshIssues={fetchIssues}
@@ -190,6 +195,12 @@ export default function App() {
           } />
           <Route path="/integrity" element={
             <IntegrityPortal currentUser={currentUser || DEFAULT_MOCK_USER} language={language} />
+          } />
+          <Route path="/threats" element={
+            <CyberThreatPortal currentUser={currentUser || DEFAULT_MOCK_USER} language={language} onNavigateHome={() => navigate("/dashboard")} />
+          } />
+          <Route path="/cyber-threats" element={
+            <CyberThreatPortal currentUser={currentUser || DEFAULT_MOCK_USER} language={language} onNavigateHome={() => navigate("/dashboard")} />
           } />
           <Route path="/field-officer" element={
             <FieldOfficerPortal 

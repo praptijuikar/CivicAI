@@ -14,6 +14,7 @@ import { validateUploadedImage } from "./server/imageValidation.ts";
 import { ComplaintQueue, type ComplaintQueueJob } from "./server/complaintQueue.ts";
 import { calculateBudgetAllocation, estimateRepairCost } from "./server/budgetOptimizer.ts";
 import { sendComplaintConfirmation } from "./server/services/emailService.ts";
+import { processThreatSubmission } from "./server/threatPipeline.ts";
 import {
   db,
   USERS,
@@ -837,6 +838,114 @@ async function startServer() {
     });
 
     res.json({ report: updated, message: "Integrity case status updated." });
+  });
+
+  // ==========================================
+  // ONLINE THREAT & CYBER HARASSMENT APIS
+  // ==========================================
+  const threatEvidenceSchema = z.object({
+    id: z.string().optional(),
+    fileName: z.string().trim().min(1).max(255),
+    fileHash: z.string().trim().min(16).max(128),
+    mimeType: z.string().trim().min(1).max(100),
+    fileSize: z.number().optional(),
+    fileSizeFormatted: z.string().optional(),
+    previewUrl: z.string().optional(),
+    fileData: z.string().optional(),
+    extractedText: z.string().optional(),
+    ocrConfidence: z.number().optional(),
+  });
+
+  const threatSubmitSchema = z.object({
+    isAnonymous: z.boolean().default(false),
+    complainantContact: z
+      .object({
+        name: z.string().trim().max(150).optional().default(""),
+        email: z.string().trim().max(150).optional().default(""),
+        phone: z.string().trim().max(50).optional().default(""),
+        preferredContact: z.enum(["EMAIL", "PHONE", "SECURE_IN_APP", "DO_NOT_CONTACT"]).optional(),
+        safeCallbackHours: z.string().max(100).optional(),
+      })
+      .optional(),
+    threatCategory: z.string().trim().min(1).max(100),
+    incidentMeta: z.object({
+      platform: z.string().trim().min(1).max(100),
+      suspectHandle: z.string().trim().max(200).optional().default(""),
+      suspectProfileUrl: z.string().trim().max(500).optional().default(""),
+      suspectContactInfo: z.string().trim().max(200).optional(),
+      incidentTimestamp: z.string().trim().min(1).max(100),
+      narrative: z.string().trim().min(1).max(10000),
+      repeatOffender: z.boolean().optional(),
+      priorComplaintsFiled: z.boolean().optional(),
+    }),
+    evidenceFiles: z.array(threatEvidenceSchema).default([]),
+  });
+
+  app.get("/api/v1/threats", allowPublicAccess, (req, res) => {
+    const { category, status, search } = req.query;
+    const reports = db.getThreatReports({
+      category: category as string,
+      status: status as string,
+      search: search as string,
+    });
+    res.json({ reports, count: reports.length });
+  });
+
+  app.get("/api/v1/threats/:ticketId", allowPublicAccess, (req, res) => {
+    const report = db.getThreatReportByTicketId(req.params.ticketId);
+    if (!report) {
+      return res.status(404).json({ error: "Cyber threat report not found" });
+    }
+    res.json({ report });
+  });
+
+  app.post("/api/v1/threats/submit", allowPublicAccess, async (req, res) => {
+    try {
+      const parsed = threatSubmitSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Invalid cyber threat complaint payload",
+          details: parsed.error.flatten().fieldErrors,
+        });
+      }
+
+      const report = await processThreatSubmission(parsed.data);
+      db.createThreatReport(report);
+
+      return res.status(201).json({
+        ticketId: report.ticketId,
+        severityScore: report.severityScore,
+        urgencyLevel: report.urgencyLevel,
+        legalSectionsFlagged: report.legalSectionsFlagged,
+        hashDigest: report.hashDigest,
+        extractedText: report.extractedText,
+        aiAnalysis: report.aiAnalysis,
+        legalDossier: report.legalDossier,
+        report,
+        message: "Cyber harassment complaint processed, evidence hash-verified, and legal dossier generated successfully.",
+      });
+    } catch (err: any) {
+      console.error("Threat submission error:", err);
+      return res.status(500).json({
+        error: "Failed to process cyber threat report",
+        details: err.message,
+      });
+    }
+  });
+
+  app.patch("/api/v1/threats/:ticketId/status", requireAuth, requireRole("admin", "officer", "investigator"), (req, res) => {
+    const { status, statusNotes, assignedInvestigator } = req.body;
+    const updated = db.updateThreatReport(req.params.ticketId, {
+      status,
+      statusNotes,
+      assignedInvestigator: assignedInvestigator || res.locals.user.name,
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: "Threat report not found" });
+    }
+
+    res.json({ report: updated, message: `Threat case status updated to ${status}.` });
   });
 
   // ==========================================

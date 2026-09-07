@@ -5,6 +5,7 @@ import { appendAuditEntry, getAuditEntries, verifyAuditChain } from "./auditLedg
 import type {
   CivicIssue,
   IntegrityReport,
+  CyberThreatReport,
   User,
   DepartmentStats,
   AnalyticsOverview,
@@ -946,6 +947,224 @@ export let INTEGRITY_REPORTS: IntegrityReport[] = [
   },
 ];
 
+export let THREAT_REPORTS: CyberThreatReport[] = [
+  {
+    id: "threat-seed-01",
+    ticketId: "CYBER-2026-92814",
+    isAnonymous: false,
+    complainantContact: {
+      name: "Pooja Sharma",
+      email: "pooja.sharma@example.com",
+      phone: "+919876543210",
+      preferredContact: "EMAIL",
+      safeCallbackHours: "10:00 AM - 6:00 PM IST",
+    },
+    threatCategory: "EXTORTION_SEXTORTION",
+    incidentMeta: {
+      platform: "INSTAGRAM",
+      suspectHandle: "@blackmail_darknet_99",
+      suspectProfileUrl: "https://instagram.com/blackmail_darknet_99",
+      incidentTimestamp: "2026-09-07T21:15:00Z",
+      narrative: "Received direct messages threatening to publish private photos to family and college groups unless ₹50,000 in UPI/crypto is sent within 12 hours.",
+      repeatOffender: true,
+      priorComplaintsFiled: false,
+    },
+    evidenceFiles: [
+      {
+        id: "ev-threat-01",
+        fileName: "instagram_dm_extortion_threat.png",
+        fileHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        mimeType: "image/png",
+        fileSize: 1458200,
+        fileSizeFormatted: "1.4 MB",
+        extractedText: "You have 12 hours to pay 50k INR or all your photos will be posted on university tag and sent to your contact list.",
+        ocrConfidence: 0.98,
+      },
+    ],
+    severityScore: 0.92,
+    urgencyLevel: "CRITICAL",
+    legalSectionsFlagged: [
+      {
+        section: "Section 383 & 384 (BNS Sec 308)",
+        act: "Indian Penal Code (IPC) / Bharatiya Nyaya Sanhita (BNS)",
+        title: "Extortion & Digital Blackmail / Sextortion",
+        description: "Intentionally putting any person in fear of any injury and thereby dishonestly inducing them to deliver money or property.",
+        punishment: "Imprisonment up to 3 years, or fine, or both",
+        cognizable: true,
+        bailable: false,
+        relevanceReason: "Applicable when money is demanded under duress with threats to circulate private media.",
+      },
+      {
+        section: "Section 66E",
+        act: "Information Technology Act, 2000",
+        title: "Violation of Privacy (Non-Consensual Imagery)",
+        description: "Punishes capturing, transmitting, or publishing images of private areas of any person without consent.",
+        punishment: "Imprisonment up to 3 years and/or fine up to ₹2,00,000",
+        cognizable: true,
+        bailable: true,
+        relevanceReason: "Applicable where private photos or intimate media are threatened with publication.",
+      },
+      {
+        section: "Section 67 / 67A",
+        act: "Information Technology Act, 2000",
+        title: "Publishing / Transmitting Sexually Explicit Material",
+        description: "Severe non-bailable offense prohibiting transmission or publishing of obscene or sexually explicit material electronically.",
+        punishment: "First conviction: up to 5 years + ₹10 Lakh fine; Second conviction: up to 7 years",
+        cognizable: true,
+        bailable: false,
+        relevanceReason: "Triggered in cases involving explicit blackmail and sextortion threats.",
+      },
+      {
+        section: "Section 503 & 506 (BNS Sec 351)",
+        act: "Indian Penal Code (IPC) / Bharatiya Nyaya Sanhita (BNS)",
+        title: "Criminal Intimidation",
+        description: "Threatening another person with injury to reputation with intent to cause alarm or force unlawful acts.",
+        punishment: "Imprisonment up to 7 years",
+        cognizable: true,
+        bailable: false,
+        relevanceReason: "Threatening public humiliation and reputational damage.",
+      },
+    ],
+    hashDigest: "8f434346648f6b96df89dda901c5176b10e6d0ceec3e6a88b20d8e3fc70be23a",
+    extractedText: "[File: instagram_dm_extortion_threat.png]\nYou have 12 hours to pay 50k INR or all your photos will be posted on university tag and sent to your contact list.",
+    aiAnalysis: {
+      severityScore: 0.92,
+      urgencyLevel: "CRITICAL",
+      threatIntent: "Extortionate financial blackmail using non-consensual media threats under active deadline duress.",
+      riskFactors: [
+        "Direct financial extortion demand with 12h deadline",
+        "Threat of non-consensual intimate imagery publication",
+        "Targeting academic and familial social circle",
+      ],
+      extractedKeywords: ["extortion", "50k INR", "photos", "deadline", "blackmail"],
+      immediateSafetyActions: [
+        "Do NOT transfer any money or cryptocurrency to the extortionist.",
+        "Dial 1930 immediately to register a priority ticket with National Cyber Crime Portal.",
+        "Preserve full-screen screenshots showing device timestamps and suspect URL.",
+        "Lock down social media accounts to prevent contact scraping.",
+      ],
+      lawEnforcementRecommendation: "Issue urgent Section 91 CrPC preservation notice to Instagram/Meta and register FIR under IPC 384 & IT Act 66E/67A.",
+      confidenceScore: 0.97,
+      summary: "High-urgency sextortion complaint involving active 12h financial demand to suppress dissemination of private media.",
+    },
+    legalDossier: {
+      dossierId: "DOSSIER-CYBER-2026-92814",
+      generatedAt: "2026-09-07T21:20:00Z",
+      jurisdiction: "Cyber Crime Cell / Special Cyber Investigation Unit",
+      statutorySummary: "Offenses prima facie made out under: IPC 384, IPC 506, IT Act 66E, IT Act 67A",
+      victimStatement: "Complainant received extortion DMs demanding ₹50,000 with threats to publish confidential photos.",
+      accusedParticulars: {
+        handle: "@blackmail_darknet_99",
+        profileUrl: "https://instagram.com/blackmail_darknet_99",
+        platform: "INSTAGRAM",
+        additionalIdentifiers: "Meta account ID to be requisitioned via Subpoena/Sec 91 CrPC",
+      },
+      evidenceRegistry: [
+        {
+          fileName: "instagram_dm_extortion_threat.png",
+          sha256Hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          mimeType: "image/png",
+          ocrSummary: "You have 12 hours to pay 50k INR or all your photos will be posted on university tag",
+        },
+      ],
+      applicableLaws: [],
+      recommendedFIRSections: [
+        "Section 383 & 384 (BNS Sec 308) - Extortion",
+        "Section 66E IT Act - Privacy Violation",
+        "Section 67A IT Act - Sexually Explicit Material Transmission",
+        "Section 506 IPC - Criminal Intimidation",
+      ],
+      investigatingOfficerChecklist: [
+        "Issue Section 91 CrPC Preservation Notice to Instagram Compliance Team within 24 hours.",
+        "Request IP Access Logs, registration IMSI/IMEI, and linked mobile number for the suspect handle.",
+        "Verify evidence SHA-256 hashes against original device capture timestamp.",
+      ],
+      preservationNoticeNoticeText: "URGENT PRESERVATION DIRECTIVE UNDER SECTION 91 CrPC: Service Provider (INSTAGRAM) is directed to preserve all server logs for @blackmail_darknet_99.",
+      chainOfCustodyProof: "Master SHA-256 Digest: 8f434346648f6b96df89dda901c5176b10e6d0ceec3e6a88b20d8e3fc70be23a",
+    },
+    status: "ESCALATED_TO_CYBER_CELL",
+    statusNotes: "Priority 1930 Cyber Cell ticket escalated for expedited IP log preservation.",
+    assignedInvestigator: "Inspector Elena Rostova (Cyber Forensics Unit)",
+    createdAt: "2026-09-07T21:18:00Z",
+    updatedAt: "2026-09-07T21:20:00Z",
+  },
+  {
+    id: "threat-seed-02",
+    ticketId: "CYBER-2026-41903",
+    isAnonymous: true,
+    threatCategory: "DOXXING",
+    incidentMeta: {
+      platform: "TWITTER_X",
+      suspectHandle: "@target_harasser_x",
+      suspectProfileUrl: "https://x.com/target_harasser_x",
+      incidentTimestamp: "2026-09-06T14:30:00Z",
+      narrative: "Suspect published residential home address, personal phone number, and employer details on public thread inciting mob harassment.",
+      repeatOffender: false,
+    },
+    evidenceFiles: [
+      {
+        id: "ev-threat-02",
+        fileName: "x_doxxing_tweet_capture.png",
+        fileHash: "9a2f7c4e5b6d1a8e3f2c5b7a9d0e1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d",
+        mimeType: "image/png",
+        fileSize: 984000,
+        fileSizeFormatted: "984 KB",
+        extractedText: "Here is where they live: Flat 402, Green Meadows. Call them non-stop at +919811XXXXXX.",
+        ocrConfidence: 0.95,
+      },
+    ],
+    severityScore: 0.81,
+    urgencyLevel: "CRITICAL",
+    legalSectionsFlagged: [
+      {
+        section: "Section 499 & 500 (BNS Sec 356)",
+        act: "Indian Penal Code (IPC) / Bharatiya Nyaya Sanhita (BNS)",
+        title: "Criminal Defamation & Malicious Public Doxxing",
+        description: "Making or publishing imputations intending to harm reputation or incite public harassment.",
+        punishment: "Simple imprisonment up to 2 years, or with fine, or with both",
+        cognizable: false,
+        bailable: true,
+        relevanceReason: "Applicable when suspect publishes private home addresses and phone numbers.",
+      },
+      {
+        section: "Section 354D (BNS Sec 78)",
+        act: "Indian Penal Code (IPC) / Bharatiya Nyaya Sanhita (BNS)",
+        title: "Cyberstalking & Persistent Electronic Harassment",
+        description: "Monitoring electronic communication and inciting targeted harassment.",
+        punishment: "Imprisonment up to 3 years with fine",
+        cognizable: true,
+        bailable: true,
+        relevanceReason: "Weaponized doxxing inciting coordinated online stalking.",
+      },
+    ],
+    hashDigest: "4a9e2b1c7d8f3a5e9b0d1c2e4f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a",
+    extractedText: "Here is where they live: Flat 402, Green Meadows. Call them non-stop at +919811XXXXXX.",
+    aiAnalysis: {
+      severityScore: 0.81,
+      urgencyLevel: "CRITICAL",
+      threatIntent: "Public doxxing and inciting coordinated vigilante swarming / harassment.",
+      riskFactors: [
+        "Residential physical address exposed publicly",
+        "Phone number leaked for targeted phone bombing",
+      ],
+      extractedKeywords: ["doxxing", "home address", "phone number", "harassment"],
+      immediateSafetyActions: [
+        "File emergency takedown report with X Safety Support.",
+        "Alert building security regarding potential unsolicited visitors.",
+        "Temporarily activate call-screening/DND on personal phone.",
+      ],
+      lawEnforcementRecommendation: "Issue Section 69A IT Act emergency takedown order and trace originating IP.",
+      confidenceScore: 0.94,
+      summary: "Severe doxxing incident with active incitement to harass victim at their residential premises.",
+    },
+    status: "UNDER_INVESTIGATION",
+    statusNotes: "Emergency takedown request submitted to platform intermediary.",
+    assignedInvestigator: "Officer Sarah Chen",
+    createdAt: "2026-09-06T15:00:00Z",
+    updatedAt: "2026-09-06T15:30:00Z",
+  },
+];
+
 ISSUES = ISSUES.map((issue) => ({ ...issue, tenantId: issue.tenantId || "municipality-sf" }));
 
 const PENDING_APPROVALS = new Map<string, {
@@ -1458,6 +1677,64 @@ export const db = {
     const updated = { ...existing, ...updates };
     INTEGRITY_REPORTS[idx] = updated;
     persistToFirebase("integrityReports", updated.id, updated);
+    return updated;
+  },
+
+  // Cyber Threat & Online Harassment Module
+  getThreatReports: (filter?: { category?: string; status?: string; search?: string }): CyberThreatReport[] => {
+    let result = [...THREAT_REPORTS];
+    if (filter?.category) {
+      result = result.filter((r) => r.threatCategory.toLowerCase() === filter.category?.toLowerCase());
+    }
+    if (filter?.status) {
+      result = result.filter((r) => r.status.toLowerCase() === filter.status?.toLowerCase());
+    }
+    if (filter?.search) {
+      const q = filter.search.toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.ticketId.toLowerCase().includes(q) ||
+          r.incidentMeta.narrative.toLowerCase().includes(q) ||
+          r.incidentMeta.suspectHandle?.toLowerCase().includes(q) ||
+          r.threatCategory.toLowerCase().includes(q)
+      );
+    }
+    return result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  getThreatReportByTicketId: (ticketIdOrId: string): CyberThreatReport | null => {
+    return (
+      THREAT_REPORTS.find(
+        (r) =>
+          r.ticketId.toLowerCase() === ticketIdOrId.toLowerCase() ||
+          r.id.toLowerCase() === ticketIdOrId.toLowerCase()
+      ) || null
+    );
+  },
+
+  createThreatReport: (report: CyberThreatReport): CyberThreatReport => {
+    THREAT_REPORTS.unshift(report);
+    persistToFirebase("threatReports", report.id, report);
+    return report;
+  },
+
+  updateThreatReport: (
+    ticketIdOrId: string,
+    updates: Partial<CyberThreatReport>
+  ): CyberThreatReport | null => {
+    const idx = THREAT_REPORTS.findIndex(
+      (r) =>
+        r.ticketId.toLowerCase() === ticketIdOrId.toLowerCase() ||
+        r.id.toLowerCase() === ticketIdOrId.toLowerCase()
+    );
+    if (idx === -1) return null;
+    const updated = {
+      ...THREAT_REPORTS[idx],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    THREAT_REPORTS[idx] = updated;
+    persistToFirebase("threatReports", updated.id, updated);
     return updated;
   },
 
