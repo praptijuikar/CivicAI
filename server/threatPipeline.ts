@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { GoogleGenAI } from "@google/genai";
+import { db } from "./db.ts";
 import type {
   ThreatCategory,
   ThreatPlatform,
@@ -641,4 +642,32 @@ export async function processThreatSubmission(payload: {
   };
 
   return report;
+}
+
+export async function processThreatReport(req: any, res: any) {
+  try {
+    const payload = req.body;
+    const report = await processThreatSubmission(payload);
+    db.createThreatReport(report);
+    return res.status(201).json({
+      success: true,
+      ticketId: report.ticketId,
+      severityScore: report.severityScore,
+      urgencyLevel: report.urgencyLevel,
+      legalSectionsFlagged: report.legalSectionsFlagged,
+      hashDigest: report.hashDigest,
+      extractedText: report.extractedText,
+      aiAnalysis: report.aiAnalysis,
+      legalDossier: report.legalDossier,
+      report,
+      message: "Threat report processed and legal dossier generated successfully",
+    });
+  } catch (error: any) {
+    console.error("Error in processThreatReport:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+      message: error?.message || "Failed to process threat report",
+    });
+  }
 }

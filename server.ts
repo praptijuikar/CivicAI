@@ -14,7 +14,7 @@ import { validateUploadedImage } from "./server/imageValidation.ts";
 import { ComplaintQueue, type ComplaintQueueJob } from "./server/complaintQueue.ts";
 import { calculateBudgetAllocation, estimateRepairCost } from "./server/budgetOptimizer.ts";
 import { sendComplaintConfirmation } from "./server/services/emailService.ts";
-import { processThreatSubmission } from "./server/threatPipeline.ts";
+import { processThreatSubmission, processThreatReport } from "./server/threatPipeline.ts";
 import {
   db,
   USERS,
@@ -288,6 +288,26 @@ app.use((req, res, next) => {
     console.log(`[API] ${req.method} ${req.path}`);
   }
   next();
+});
+
+// ==========================================
+// ONLINE THREAT & CYBER HARASSMENT MODULE
+// ==========================================
+app.post("/api/v1/threats/submit", processThreatReport);
+app.get("/api/v1/threats", (req, res) => {
+  const reports = db.getThreatReports();
+  return res.json({ reports, count: reports.length });
+});
+app.get("/api/v1/threats/:ticketId", (req, res) => {
+  const report = db.getThreatReportByTicketId(req.params.ticketId);
+  if (!report) return res.status(404).json({ error: "Threat report not found" });
+  return res.json({ report });
+});
+app.patch("/api/v1/threats/:ticketId/status", (req, res) => {
+  const { status, statusNotes, assignedInvestigator } = req.body;
+  const report = db.updateThreatReport(req.params.ticketId, { status, statusNotes, assignedInvestigator });
+  if (!report) return res.status(404).json({ error: "Threat report not found" });
+  return res.json({ report, message: "Threat report status updated" });
 });
 
 // ==========================================
